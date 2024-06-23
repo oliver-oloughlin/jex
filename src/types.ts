@@ -5,53 +5,53 @@
 /********************/
 
 export type ClientConfig<
-  TResourceConfigs extends ResourceRecord<FetcherInit<TFetcher>>,
+  TResourceConfigs extends ResourceRecord<TFetcher>,
   TFetcher extends Fetcher,
 > = {
   baseUrl: string
   resources: TResourceConfigs
   logger?: Logger
   fetcher?: TFetcher
-  plugins?: Plugin<FetcherInit<TFetcher>>[]
+  plugins?: Plugin<TFetcher>[]
 }
 
-export type ResourceRecord<TInit extends RequestInit> = {
-  [K in string]: ResourceConfig<TInit>
+export type ResourceRecord<TFetcher extends Fetcher> = {
+  [K in string]: ResourceConfig<TFetcher>
 }
 
-export type ResourceConfig<TInit extends RequestInit> = {
+export type ResourceConfig<TFetcher extends Fetcher> = {
   path: string
-  actions: ActionsRecord<TInit>
-  plugins?: Plugin<TInit>[]
+  actions: ActionsRecord<TFetcher>
+  plugins?: Plugin<TFetcher>[]
 }
 
-export type ActionsRecord<TInit extends RequestInit> = {
-  get?: BodylessActionConfig<TInit>
-  head?: BodylessActionConfig<TInit>
-  post?: BodyfullActionConfig<TInit>
-  delete?: BodyfullActionConfig<TInit>
-  patch?: BodyfullActionConfig<TInit>
-  put?: BodyfullActionConfig<TInit>
-  options?: BodyfullActionConfig<TInit>
+export type ActionsRecord<TFetcher extends Fetcher> = {
+  get?: BodylessActionConfig<TFetcher>
+  head?: BodylessActionConfig<TFetcher>
+  post?: BodyfullActionConfig<TFetcher>
+  delete?: BodyfullActionConfig<TFetcher>
+  patch?: BodyfullActionConfig<TFetcher>
+  put?: BodyfullActionConfig<TFetcher>
+  options?: BodyfullActionConfig<TFetcher>
 }
 
-export type BodylessActionConfig<TInit extends RequestInit> = {
+export type BodylessActionConfig<TFetcher extends Fetcher> = {
   data?: Schema<any>
   dataSource?: "json" | "text" | "blob" | "arrayBuffer" | "bytes" | "formData"
   query?: Schema<any>
-  plugins?: Plugin<TInit>[]
+  plugins?: Plugin<TFetcher>[]
 }
 
-export type BodyfullActionConfig<TInit extends RequestInit> =
-  & BodylessActionConfig<TInit>
+export type BodyfullActionConfig<TFetcher extends Fetcher> =
+  & BodylessActionConfig<TFetcher>
   & {
     body?: Schema<any>
     bodySource?: "json" | "raw" | "URLSearchParameters" | "FormData"
   }
 
-export type ActionConfig<TInit extends RequestInit> =
-  | BodylessActionConfig<TInit>
-  | BodyfullActionConfig<TInit>
+export type ActionConfig<TFetcher extends Fetcher> =
+  | BodylessActionConfig<TFetcher>
+  | BodyfullActionConfig<TFetcher>
 
 /********************/
 /*                  */
@@ -60,32 +60,32 @@ export type ActionConfig<TInit extends RequestInit> =
 /********************/
 
 export type Client<
-  TResourceConfigs extends ResourceRecord<TInit>,
-  TInit extends RequestInit,
+  TResourceConfigs extends ResourceRecord<TFetcher>,
+  TFetcher extends Fetcher,
 > = {
-  [K in keyof TResourceConfigs]: Resource<TResourceConfigs[K], TInit>
+  [K in keyof TResourceConfigs]: Resource<TResourceConfigs[K], TFetcher>
 }
 
 export type Resource<
-  TResourceConfig extends ResourceConfig<TInit>,
-  TInit extends RequestInit,
+  TResourceConfig extends ResourceConfig<TFetcher>,
+  TFetcher extends Fetcher,
 > = {
   [K in KeysOfThatDontExtend<TResourceConfig["actions"], undefined>]:
-    TResourceConfig["actions"][K] extends ActionConfig<TInit> ? Action<
+    TResourceConfig["actions"][K] extends ActionConfig<TFetcher> ? Action<
         PathParams<TResourceConfig["path"]>,
         TResourceConfig["actions"][K],
-        TInit
+        TFetcher
       >
       : never
 }
 
 export type Action<
   TPathParams extends PathParams<any>,
-  TActionConfig extends ActionConfig<TInit>,
-  TInit extends RequestInit,
-> = IsOptionalObject<ActionArgs<TPathParams, TActionConfig, TInit>> extends true
-  ? (
-    args?: ActionArgs<TPathParams, TActionConfig, TInit>,
+  TActionConfig extends ActionConfig<TFetcher>,
+  TFetcher extends Fetcher,
+> = IsOptionalObject<ActionArgs<TPathParams, TActionConfig, TFetcher>> extends
+  true ? (
+    args?: ActionArgs<TPathParams, TActionConfig, TFetcher>,
   ) => Promise<
     Result<
       TActionConfig["data"] extends Schema<any> ? TypeOf<TActionConfig["data"]>
@@ -93,7 +93,7 @@ export type Action<
     >
   >
   : (
-    args: ActionArgs<TPathParams, TActionConfig, TInit>,
+    args: ActionArgs<TPathParams, TActionConfig, TFetcher>,
   ) => Promise<
     Result<
       TActionConfig["data"] extends Schema<any> ? TypeOf<TActionConfig["data"]>
@@ -118,23 +118,23 @@ export type Result<T> =
 
 export type ActionArgs<
   TPathParams extends PathParams<any>,
-  TActionConfig extends ActionConfig<TInit>,
-  TInit extends RequestInit,
+  TActionConfig extends ActionConfig<TFetcher>,
+  TFetcher extends Fetcher,
 > =
   & (IsOptionalObject<
     WithOptionalProperty<{ params: { [K in TPathParams]: string } }>
   > extends false
     ? WithOptionalProperty<{ params: { [K in TPathParams]: string } }>
-    : { init?: StrippedRequestInit<TInit> })
+    : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
   & (TActionConfig["query"] extends Schema<any>
     ? WithOptionalProperty<{ query: TypeOf<TActionConfig["query"]> }>
-    : { init?: StrippedRequestInit<TInit> })
-  & (TActionConfig extends BodyfullActionConfig<TInit>
+    : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
+  & (TActionConfig extends BodyfullActionConfig<TFetcher>
     ? (TActionConfig["body"] extends Schema<any>
       ? WithOptionalProperty<{ body: TypeOf<TActionConfig["body"]> }>
-      : { init?: StrippedRequestInit<TInit> })
-    : { init?: StrippedRequestInit<TInit> })
-  & { init?: StrippedRequestInit<TInit> }
+      : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
+    : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
+  & { init?: StrippedRequestInit<FetcherInit<TFetcher>> }
 
 /*********************/
 /*                   */
@@ -145,7 +145,7 @@ export type ActionArgs<
 export type PossibleActionArgs = ActionArgs<
   "param",
   { query: Schema<Record<string, never>>; body: Schema<Record<string, never>> },
-  RequestInit
+  Fetcher
 >
 
 export type WithOptionalProperty<T> = IsOptionalObject<T[keyof T]> extends true
@@ -189,7 +189,6 @@ export type TypeOf<TSchema extends Schema<any>> = ReturnType<TSchema["parse"]>
 export type LogFn = (...data: unknown[]) => void
 
 export type Logger = {
-  log: LogFn
   info: LogFn
   warn: LogFn
   trace: LogFn
@@ -207,16 +206,16 @@ export type FetcherInit<TFetcher extends Fetcher> = Exclude<
   undefined
 >
 
-export type Plugin<TInit extends RequestInit> = {
+export type Plugin<TFetcher extends Fetcher = Fetcher> = {
   before?(
-    ctx: PluginBeforeContext<TInit>,
+    ctx: PluginBeforeContext<TFetcher>,
   ):
-    | StrippedRequestInit<TInit>
-    | Promise<StrippedRequestInit<TInit>>
+    | StrippedRequestInit<FetcherInit<TFetcher>>
+    | Promise<StrippedRequestInit<FetcherInit<TFetcher>>>
     | void
     | Promise<void>
   after?(
-    ctx: PluginAfterContext<TInit>,
+    ctx: PluginAfterContext<TFetcher>,
   ):
     | Response
     | Promise<Response>
@@ -224,18 +223,20 @@ export type Plugin<TInit extends RequestInit> = {
     | Promise<void>
 }
 
-export type PluginBeforeContext<TInit extends RequestInit> = {
-  path: string
-  method: string
-  init: TInit
+export type PluginBeforeContext<TFetcher extends Fetcher> = {
+  client: ClientConfig<ResourceRecord<TFetcher>, TFetcher>
+  resource: ResourceConfig<TFetcher>
+  action: ActionConfig<TFetcher>
+  method: keyof ActionsRecord<TFetcher>
+  init: FetcherInit<TFetcher>
   args?: PossibleActionArgs
 }
 
-export type PluginAfterContext<TInit extends RequestInit> =
-  & PluginBeforeContext<TInit>
+export type PluginAfterContext<TFetcher extends Fetcher> =
+  & PluginBeforeContext<TFetcher>
   & {
     res: Response
-    refetch(init: StrippedRequestInit<TInit>): Promise<Response>
+    refetch(init: StrippedRequestInit<FetcherInit<TFetcher>>): Promise<Response>
   }
 
 export type PathParams<TPath extends string> = TPath extends

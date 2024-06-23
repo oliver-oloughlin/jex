@@ -163,7 +163,9 @@ async function createInit(
   let init: RequestInit = {}
 
   let ctx: PluginBeforeContext<RequestInit> = {
-    path: resourceConfig.path,
+    client: clientConfig,
+    resource: resourceConfig,
+    action: actionConfig,
     method,
     init,
     args,
@@ -224,10 +226,12 @@ async function sendRequest(
   let res = await fetcher(url, init)
 
   let ctx: PluginAfterContext<RequestInit> = {
+    client: clientConfig,
+    resource: resourceConfig,
+    action: actionConfig,
     init,
     args,
     method,
-    path: resourceConfig.path,
     res,
     async refetch(refetchInit) {
       let i = deepMerge(init, refetchInit)

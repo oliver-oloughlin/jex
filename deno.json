@@ -7,5 +7,10 @@
   },
   "fmt": {
     "semiColons": false
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-explicit-any"]
+    }
   }
 }
