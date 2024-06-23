@@ -37,7 +37,7 @@ export type ActionsRecord<TInit extends RequestInit> = {
 
 export type BodylessActionConfig<TInit extends RequestInit> = {
   data?: Schema<any>
-  dataSource?: DataSource
+  dataSource?: "json" | "text" | "blob" | "arrayBuffer" | "bytes" | "formData"
   query?: Schema<any>
   plugins?: Plugin<TInit>[]
 }
@@ -46,6 +46,7 @@ export type BodyfullActionConfig<TInit extends RequestInit> =
   & BodylessActionConfig<TInit>
   & {
     body?: Schema<any>
+    bodySource?: "json" | "raw" | "URLSearchParameters" | "FormData"
   }
 
 export type ActionConfig<TInit extends RequestInit> =
@@ -102,6 +103,7 @@ export type Action<
 
 export type Result<T> =
   & {
+    raw?: Response
     statusText?: string
     status?: number
   }
@@ -195,7 +197,10 @@ export type Logger = {
   error: LogFn
 }
 
-export type Fetcher = (url: string, init?: RequestInit) => Promise<Response>
+export type Fetcher = (
+  url: string | URL,
+  init?: RequestInit,
+) => Promise<Response>
 
 export type FetcherInit<TFetcher extends Fetcher> = Exclude<
   Parameters<TFetcher>["1"],
@@ -222,6 +227,7 @@ export type Plugin<TInit extends RequestInit> = {
 export type PluginBeforeContext<TInit extends RequestInit> = {
   path: string
   method: string
+  init: TInit
   args?: PossibleActionArgs
 }
 

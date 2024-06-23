@@ -1,10 +1,13 @@
+import { HttpError } from "./errors.ts"
 import type {
   ActionConfig,
+  BodyfullActionConfig,
   Client,
   ClientConfig,
   Fetcher,
   FetcherInit,
   Plugin,
+  PluginAfterContext,
   PluginBeforeContext,
   PossibleActionArgs,
   ResourceConfig,
@@ -67,8 +70,15 @@ function createAction(
         method,
       )
 
-      const fetcher = clientConfig.fetcher ?? fetch
-      const res = await fetcher(url, init)
+      const res = await sendRequest(
+        clientConfig,
+        resourceConfig,
+        actionConfig,
+        args,
+        init,
+        url,
+        method,
+      )
 
       if (!res.ok) {
         return {
@@ -76,18 +86,19 @@ function createAction(
           status: res.status,
           statusText: res.statusText,
           data: null,
-          error: new Error(`HttpError: ${res.status} ${res.statusText}`),
+          error: new HttpError(res.status, res.statusText),
+          raw: res,
         }
       }
 
-      // TODO
-      const data = null
+      const data = await parseData(actionConfig, res)
 
       return {
         success: true,
         status: res.status,
         statusText: res.statusText,
         data,
+        raw: res,
       }
     } catch (e) {
       return {
@@ -149,29 +160,107 @@ async function createInit(
   args: PossibleActionArgs | undefined,
   method: string,
 ) {
-  const ctx: PluginBeforeContext<RequestInit> = {
+  let init: RequestInit = {}
+
+  let ctx: PluginBeforeContext<RequestInit> = {
     path: resourceConfig.path,
     method,
+    init,
     args,
   }
 
-  let init: RequestInit = {}
-
   for (const plugin of clientConfig.plugins ?? []) {
+    ctx = {
+      ...ctx,
+      init,
+    }
     init = await applyBefore(init, ctx, plugin)
   }
 
   for (const plugin of resourceConfig.plugins ?? []) {
+    ctx = {
+      ...ctx,
+      init,
+    }
     init = await applyBefore(init, ctx, plugin)
   }
 
   for (const plugin of actionConfig.plugins ?? []) {
+    ctx = {
+      ...ctx,
+      init,
+    }
     init = await applyBefore(init, ctx, plugin)
   }
+
+  const bodyData = createBody(actionConfig, args)
+
+  init = deepMerge(init as object, {
+    body: bodyData.body,
+    ...(bodyData.contentType
+      ? {
+        headers: {
+          "Content-Type": bodyData.contentType,
+        },
+      }
+      : {}),
+  })
 
   init = deepMerge(init as object, args?.init ?? {} as object)
   init = deepMerge(init, { method })
   return init
+}
+
+async function sendRequest(
+  clientConfig: ClientConfig<any, any>,
+  resourceConfig: ResourceConfig<any>,
+  actionConfig: ActionConfig<any>,
+  args: PossibleActionArgs | undefined,
+  init: RequestInit,
+  url: string,
+  method: string,
+): Promise<Response> {
+  const fetcher = clientConfig.fetcher ?? fetch
+  let res = await fetcher(url, init)
+
+  let ctx: PluginAfterContext<RequestInit> = {
+    init,
+    args,
+    method,
+    path: resourceConfig.path,
+    res,
+    async refetch(refetchInit) {
+      let i = deepMerge(init, refetchInit)
+      i = deepMerge(i, { method })
+      return await fetcher(url, init)
+    },
+  }
+
+  for (const plugin of clientConfig.plugins ?? []) {
+    ctx = {
+      ...ctx,
+      res,
+    }
+    res = await applyAfter(ctx, plugin)
+  }
+
+  for (const plugin of resourceConfig.plugins ?? []) {
+    ctx = {
+      ...ctx,
+      res,
+    }
+    res = await applyAfter(ctx, plugin)
+  }
+
+  for (const plugin of actionConfig.plugins ?? []) {
+    ctx = {
+      ...ctx,
+      res,
+    }
+    res = await applyAfter(ctx, plugin)
+  }
+
+  return res
 }
 
 async function applyBefore(
@@ -183,4 +272,87 @@ async function applyBefore(
   const result = await plugin.before(ctx)
   if (result) return deepMerge(init as object, result)
   return init
+}
+
+async function applyAfter(
+  ctx: PluginAfterContext<RequestInit>,
+  plugin: Plugin<RequestInit>,
+): Promise<Response> {
+  if (!plugin.after) return ctx.res
+  const res = await plugin.after(ctx)
+  if (res) return res
+  return ctx.res
+}
+
+function createBody(
+  actionConfig: BodyfullActionConfig<any>,
+  args: PossibleActionArgs | undefined,
+): {
+  body?: BodyInit
+  contentType?: string
+} {
+  if (!actionConfig.body || !args?.body) {
+    return {}
+  }
+
+  const bodySource = actionConfig.bodySource ?? "json"
+  const parsed = actionConfig.body.parse(args.body)
+
+  switch (bodySource) {
+    case "json": {
+      return {
+        body: JSON.stringify(parsed),
+        contentType: "application/json",
+      }
+    }
+    case "FormData": {
+      if (parsed instanceof FormData) {
+        return {
+          body: parsed,
+        }
+      }
+
+      const data = new FormData()
+
+      Object
+        .entries(parsed)
+        .forEach(([key, value]) => data.append(key, (value as any).toString()))
+
+      return {
+        body: data,
+      }
+    }
+    case "URLSearchParameters": {
+      if (parsed instanceof URLSearchParams) {
+        return {
+          body: parsed,
+        }
+      }
+
+      const data = new URLSearchParams()
+
+      Object
+        .entries(parsed)
+        .forEach(([key, value]) => data.append(key, (value as any).toString()))
+
+      return {
+        body: new URLSearchParams(data),
+      }
+    }
+    default: {
+      return {
+        body: parsed,
+      }
+    }
+  }
+}
+
+async function parseData(
+  actionConfig: ActionConfig<any>,
+  res: Response,
+) {
+  if (!actionConfig.data) return null
+  const dataSource = actionConfig.dataSource ?? "json"
+  const data = await res[dataSource]()
+  return actionConfig.data.parse(data)
 }
