@@ -1,0 +1,11 @@
+{
+  "name": "@olli/jex",
+  "version": "0.0.0",
+  "exports": "./mod.ts",
+  "imports": {
+    "@std/collections": "jsr:@std/collections@1.0.0"
+  },
+  "fmt": {
+    "semiColons": false
+  }
+}
