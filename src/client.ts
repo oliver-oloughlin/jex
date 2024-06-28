@@ -1,11 +1,11 @@
 import { HttpError } from "./errors.ts"
 import type {
   ActionConfig,
+  ActionsRecord,
   BodyfullActionConfig,
   Client,
   ClientConfig,
   Fetcher,
-  FetcherInit,
   Plugin,
   PluginAfterContext,
   PluginBeforeContext,
@@ -16,12 +16,12 @@ import type {
 } from "./types.ts"
 import { deepMerge } from "@std/collections"
 
-export function createClient<
-  const TResourceConfigs extends ResourceRecord<FetcherInit<TFetcher>>,
+export function jex<
+  const TResourceRecord extends ResourceRecord<TFetcher>,
   const TFetcher extends Fetcher = Fetcher,
 >(
-  config: ClientConfig<TResourceConfigs, TFetcher>,
-): Client<TResourceConfigs, FetcherInit<TFetcher>> {
+  config: ClientConfig<TResourceRecord, TFetcher>,
+): Client<TResourceRecord, TFetcher> {
   const resourceEntries = Object
     .entries(config.resources)
     .map((
@@ -29,8 +29,8 @@ export function createClient<
     ) => [key, createResource(config, resourceConfig)])
 
   return Object.fromEntries(resourceEntries) as Client<
-    TResourceConfigs,
-    FetcherInit<TFetcher>
+    TResourceRecord,
+    TFetcher
   >
 }
 
@@ -42,7 +42,15 @@ function createResource(
     .entries(resourceConfig.actions)
     .map((
       [key, actionConfig],
-    ) => [key, createAction(clientConfig, resourceConfig, actionConfig, key)])
+    ) => [
+      key,
+      createAction(
+        clientConfig,
+        resourceConfig,
+        actionConfig,
+        key as keyof ActionsRecord<Fetcher>,
+      ),
+    ])
 
   return Object.fromEntries(actionEntries)
 }
@@ -51,7 +59,7 @@ function createAction(
   clientConfig: ClientConfig<any, Fetcher>,
   resourceConfig: ResourceConfig<any>,
   actionConfig: ActionConfig<any>,
-  method: string,
+  method: keyof ActionsRecord<Fetcher>,
 ) {
   return async function (args?: PossibleActionArgs): Promise<Result<any>> {
     try {
@@ -82,11 +90,11 @@ function createAction(
 
       if (!res.ok) {
         return {
-          success: false,
+          ok: false,
           status: res.status,
           statusText: res.statusText,
-          data: null,
           error: new HttpError(res.status, res.statusText),
+          data: null,
           raw: res,
         }
       }
@@ -94,7 +102,7 @@ function createAction(
       const data = await parseData(actionConfig, res)
 
       return {
-        success: true,
+        ok: true,
         status: res.status,
         statusText: res.statusText,
         data,
@@ -102,10 +110,9 @@ function createAction(
       }
     } catch (e) {
       return {
-        success: false,
-        error: e,
+        ok: false,
         data: null,
-        statusText: "A client-side error occured",
+        error: e,
       }
     }
   }
@@ -117,6 +124,8 @@ function createUrl(
   params: Record<string, any> | undefined,
   query: Record<string, any> | undefined,
 ) {
+  // TODO: Use new URL(), parse query
+
   let url = baseUrl
     .replace(/[/]{1}$/, "")
     .concat("/")
@@ -158,11 +167,11 @@ async function createInit(
   resourceConfig: ResourceConfig<any>,
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
-  method: string,
+  method: keyof ActionsRecord<Fetcher>,
 ) {
   let init: RequestInit = {}
 
-  let ctx: PluginBeforeContext<RequestInit> = {
+  let ctx: PluginBeforeContext<Fetcher> = {
     client: clientConfig,
     resource: resourceConfig,
     action: actionConfig,
@@ -208,8 +217,11 @@ async function createInit(
       : {}),
   })
 
+  const parsedHeaders = actionConfig.headers?.parse(args?.headers ?? {}) ?? {}
+  const stringifiedHeaders = stringifyEntries(parsedHeaders)
   init = deepMerge(init as object, args?.init ?? {} as object)
-  init = deepMerge(init, { method })
+  init = deepMerge(init as object, { headers: stringifiedHeaders })
+  init = deepMerge(init as object, { method })
   return init
 }
 
@@ -220,12 +232,12 @@ async function sendRequest(
   args: PossibleActionArgs | undefined,
   init: RequestInit,
   url: string,
-  method: string,
+  method: keyof ActionsRecord<Fetcher>,
 ): Promise<Response> {
   const fetcher = clientConfig.fetcher ?? fetch
   let res = await fetcher(url, init)
 
-  let ctx: PluginAfterContext<RequestInit> = {
+  let ctx: PluginAfterContext<Fetcher> = {
     client: clientConfig,
     resource: resourceConfig,
     action: actionConfig,
@@ -269,8 +281,8 @@ async function sendRequest(
 
 async function applyBefore(
   init: RequestInit,
-  ctx: PluginBeforeContext<RequestInit>,
-  plugin: Plugin<RequestInit>,
+  ctx: PluginBeforeContext<Fetcher>,
+  plugin: Plugin<Fetcher>,
 ): Promise<RequestInit> {
   if (!plugin.before) return init
   const result = await plugin.before(ctx)
@@ -279,13 +291,19 @@ async function applyBefore(
 }
 
 async function applyAfter(
-  ctx: PluginAfterContext<RequestInit>,
-  plugin: Plugin<RequestInit>,
+  ctx: PluginAfterContext<Fetcher>,
+  plugin: Plugin<Fetcher>,
 ): Promise<Response> {
   if (!plugin.after) return ctx.res
   const res = await plugin.after(ctx)
   if (res) return res
   return ctx.res
+}
+
+function stringifyEntries(obj: object) {
+  return Object.fromEntries(
+    Object.entries(obj).map(([key, val]) => [key, val.toString()]),
+  )
 }
 
 function createBody(
@@ -306,7 +324,7 @@ function createBody(
     case "json": {
       return {
         body: JSON.stringify(parsed),
-        contentType: "application/json",
+        contentType: "application/json; charset=utf-8",
       }
     }
     case "FormData": {
@@ -355,7 +373,10 @@ async function parseData(
   actionConfig: ActionConfig<any>,
   res: Response,
 ) {
-  if (!actionConfig.data) return null
+  if (!actionConfig.data) {
+    await res.body?.cancel()
+    return null
+  }
   const dataSource = actionConfig.dataSource ?? "json"
   const data = await res[dataSource]()
   return actionConfig.data.parse(data)

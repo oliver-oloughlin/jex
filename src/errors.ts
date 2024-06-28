@@ -1,5 +1,5 @@
 export class HttpError extends Error {
-  name: string = "HttpError"
+  readonly name = "HttpError"
 
   constructor(status: number, statusText: string) {
     super(`${status} ${statusText}`)

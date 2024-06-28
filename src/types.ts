@@ -15,17 +15,17 @@ export type ClientConfig<
   plugins?: Plugin<TFetcher>[]
 }
 
-export type ResourceRecord<TFetcher extends Fetcher> = {
+export type ResourceRecord<TFetcher extends Fetcher = Fetcher> = {
   [K in string]: ResourceConfig<TFetcher>
 }
 
-export type ResourceConfig<TFetcher extends Fetcher> = {
+export type ResourceConfig<TFetcher extends Fetcher = Fetcher> = {
   path: string
   actions: ActionsRecord<TFetcher>
   plugins?: Plugin<TFetcher>[]
 }
 
-export type ActionsRecord<TFetcher extends Fetcher> = {
+export type ActionsRecord<TFetcher extends Fetcher = Fetcher> = {
   get?: BodylessActionConfig<TFetcher>
   head?: BodylessActionConfig<TFetcher>
   post?: BodyfullActionConfig<TFetcher>
@@ -35,21 +35,22 @@ export type ActionsRecord<TFetcher extends Fetcher> = {
   options?: BodyfullActionConfig<TFetcher>
 }
 
-export type BodylessActionConfig<TFetcher extends Fetcher> = {
-  data?: Schema<any>
+export type BodylessActionConfig<TFetcher extends Fetcher = Fetcher> = {
+  data?: Schema<any, any>
   dataSource?: "json" | "text" | "blob" | "arrayBuffer" | "bytes" | "formData"
-  query?: Schema<any>
+  query?: Schema<any, any>
   plugins?: Plugin<TFetcher>[]
+  headers?: Schema<any, any>
 }
 
-export type BodyfullActionConfig<TFetcher extends Fetcher> =
+export type BodyfullActionConfig<TFetcher extends Fetcher = Fetcher> =
   & BodylessActionConfig<TFetcher>
   & {
-    body?: Schema<any>
+    body?: Schema<any, any>
     bodySource?: "json" | "raw" | "URLSearchParameters" | "FormData"
   }
 
-export type ActionConfig<TFetcher extends Fetcher> =
+export type ActionConfig<TFetcher extends Fetcher = Fetcher> =
   | BodylessActionConfig<TFetcher>
   | BodyfullActionConfig<TFetcher>
 
@@ -61,14 +62,14 @@ export type ActionConfig<TFetcher extends Fetcher> =
 
 export type Client<
   TResourceConfigs extends ResourceRecord<TFetcher>,
-  TFetcher extends Fetcher,
+  TFetcher extends Fetcher = Fetcher,
 > = {
   [K in keyof TResourceConfigs]: Resource<TResourceConfigs[K], TFetcher>
 }
 
 export type Resource<
   TResourceConfig extends ResourceConfig<TFetcher>,
-  TFetcher extends Fetcher,
+  TFetcher extends Fetcher = Fetcher,
 > = {
   [K in KeysOfThatDontExtend<TResourceConfig["actions"], undefined>]:
     TResourceConfig["actions"][K] extends ActionConfig<TFetcher> ? Action<
@@ -82,13 +83,14 @@ export type Resource<
 export type Action<
   TPathParams extends PathParams<any>,
   TActionConfig extends ActionConfig<TFetcher>,
-  TFetcher extends Fetcher,
+  TFetcher extends Fetcher = Fetcher,
 > = IsOptionalObject<ActionArgs<TPathParams, TActionConfig, TFetcher>> extends
   true ? (
     args?: ActionArgs<TPathParams, TActionConfig, TFetcher>,
   ) => Promise<
     Result<
-      TActionConfig["data"] extends Schema<any> ? TypeOf<TActionConfig["data"]>
+      TActionConfig["data"] extends Schema<any, any>
+        ? TypeOf<TActionConfig["data"]>
         : null
     >
   >
@@ -96,7 +98,8 @@ export type Action<
     args: ActionArgs<TPathParams, TActionConfig, TFetcher>,
   ) => Promise<
     Result<
-      TActionConfig["data"] extends Schema<any> ? TypeOf<TActionConfig["data"]>
+      TActionConfig["data"] extends Schema<any, any>
+        ? TypeOf<TActionConfig["data"]>
         : null
     >
   >
@@ -108,10 +111,10 @@ export type Result<T> =
     status?: number
   }
   & ({
-    success: true
+    ok: true
     data: T
   } | {
-    success: false
+    ok: false
     data: null
     error: unknown
   })
@@ -119,19 +122,22 @@ export type Result<T> =
 export type ActionArgs<
   TPathParams extends PathParams<any>,
   TActionConfig extends ActionConfig<TFetcher>,
-  TFetcher extends Fetcher,
+  TFetcher extends Fetcher = Fetcher,
 > =
   & (IsOptionalObject<
     WithOptionalProperty<{ params: { [K in TPathParams]: string } }>
   > extends false
     ? WithOptionalProperty<{ params: { [K in TPathParams]: string } }>
     : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
-  & (TActionConfig["query"] extends Schema<any>
-    ? WithOptionalProperty<{ query: TypeOf<TActionConfig["query"]> }>
+  & (TActionConfig["query"] extends Schema<any, any>
+    ? WithOptionalProperty<{ query: Input<TActionConfig["query"]> }>
+    : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
+  & (TActionConfig["headers"] extends Schema<any, any>
+    ? WithOptionalProperty<{ headers: Input<TActionConfig["headers"]> }>
     : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
   & (TActionConfig extends BodyfullActionConfig<TFetcher>
-    ? (TActionConfig["body"] extends Schema<any>
-      ? WithOptionalProperty<{ body: TypeOf<TActionConfig["body"]> }>
+    ? (TActionConfig["body"] extends Schema<any, any>
+      ? WithOptionalProperty<{ body: Input<TActionConfig["body"]> }>
       : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
     : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
   & { init?: StrippedRequestInit<FetcherInit<TFetcher>> }
@@ -144,7 +150,11 @@ export type ActionArgs<
 
 export type PossibleActionArgs = ActionArgs<
   "param",
-  { query: Schema<Record<string, never>>; body: Schema<Record<string, never>> },
+  {
+    query: Schema<Record<string, never>, Record<string, never>>
+    body: Schema<Record<string, never>, Record<string, never>>
+    headers: Schema<Record<string, never>, Record<string, never>>
+  },
   Fetcher
 >
 
@@ -180,11 +190,16 @@ export type HasMembersExtending<T1, T2> = Extract<T1, T2> extends never ? false
 
 export type DataSource = "json" | "text"
 
-export type Schema<TData> = {
-  parse(data: unknown): TData
+export type Schema<TInput, TOutput> = {
+  parse(data: unknown): TOutput
+  _input: TInput
 }
 
-export type TypeOf<TSchema extends Schema<any>> = ReturnType<TSchema["parse"]>
+export type TypeOf<TSchema extends Schema<any, any>> = ReturnType<
+  TSchema["parse"]
+>
+
+export type Input<TSchema extends Schema<any, any>> = TSchema["_input"]
 
 export type LogFn = (...data: unknown[]) => void
 
@@ -201,7 +216,7 @@ export type Fetcher = (
   init?: RequestInit,
 ) => Promise<Response>
 
-export type FetcherInit<TFetcher extends Fetcher> = Exclude<
+export type FetcherInit<TFetcher extends Fetcher = Fetcher> = Exclude<
   Parameters<TFetcher>["1"],
   undefined
 >
@@ -223,7 +238,7 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
     | Promise<void>
 }
 
-export type PluginBeforeContext<TFetcher extends Fetcher> = {
+export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
   client: ClientConfig<ResourceRecord<TFetcher>, TFetcher>
   resource: ResourceConfig<TFetcher>
   action: ActionConfig<TFetcher>
@@ -232,7 +247,7 @@ export type PluginBeforeContext<TFetcher extends Fetcher> = {
   args?: PossibleActionArgs
 }
 
-export type PluginAfterContext<TFetcher extends Fetcher> =
+export type PluginAfterContext<TFetcher extends Fetcher = Fetcher> =
   & PluginBeforeContext<TFetcher>
   & {
     res: Response

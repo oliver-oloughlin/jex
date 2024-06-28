@@ -5,6 +5,10 @@
   "imports": {
     "@std/collections": "jsr:@std/collections@1.0.0"
   },
+  "tasks": {
+    "test": "deno test -A",
+    "prep": "deno lint && deno check ./**/*.ts"
+  },
   "fmt": {
     "semiColons": false
   },
