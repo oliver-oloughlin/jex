@@ -64,10 +64,10 @@ function createAction(
   return async function (args?: PossibleActionArgs): Promise<Result<any>> {
     try {
       const url = createUrl(
-        clientConfig.baseUrl,
-        resourceConfig.path,
-        args?.params,
-        args?.query,
+        clientConfig,
+        resourceConfig,
+        actionConfig,
+        args,
       )
 
       const init = await createInit(
@@ -119,12 +119,15 @@ function createAction(
 }
 
 function createUrl(
-  baseUrl: string,
-  path: string,
-  params: Record<string, any> | undefined,
-  query: Record<string, any> | undefined,
+  clientConfig: ClientConfig<any, Fetcher>,
+  resourceConfig: ResourceConfig<any>,
+  actionConfig: ActionConfig<any>,
+  args: PossibleActionArgs | undefined,
 ) {
-  // TODO: Use new URL(), parse query
+  const baseUrl = clientConfig.baseUrl
+  const path = resourceConfig.path
+  const query = args?.query
+  const params = args?.params
 
   let url = baseUrl
     .replace(/[/]{1}$/, "")
@@ -147,14 +150,16 @@ function createUrl(
   }
 
   if (query) {
+    const parsed = (actionConfig.query?.parse(query) ??
+      query) as Record<string, any>
+
     let isFirst = true
     Object
-      .entries(query)
+      .entries(parsed)
       .forEach(([name, value]) => {
         url += isFirst
           ? `?${name}=${value.toString()}`
           : `&${name}=${value.toString()}`
-
         isFirst = false
       })
   }

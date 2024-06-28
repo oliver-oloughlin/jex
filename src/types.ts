@@ -188,7 +188,15 @@ export type KeysOfThatNeverExtend<T1, T2> = keyof {
 export type HasMembersExtending<T1, T2> = Extract<T1, T2> extends never ? false
   : true
 
-export type DataSource = "json" | "text"
+export type DataSource =
+  | "json"
+  | "text"
+  | "blob"
+  | "arrayBuffer"
+  | "bytes"
+  | "formData"
+
+export type BodySource = "json" | "raw" | "URLSearchParameters" | "FormData"
 
 export type Schema<TInput, TOutput> = {
   parse(data: unknown): TOutput
