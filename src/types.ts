@@ -4,6 +4,8 @@
 /*                  */
 /********************/
 
+import type { HttpStatusCode } from "./http_status_code.ts"
+
 export type ClientConfig<
   TResourceConfigs extends ResourceRecord<TFetcher>,
   TFetcher extends Fetcher,
@@ -108,7 +110,7 @@ export type Result<T> =
   & {
     raw?: Response
     statusText?: string
-    status?: number
+    status?: HttpStatusCode
   }
   & ({
     ok: true
