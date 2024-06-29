@@ -2,17 +2,28 @@
   "version": "3",
   "packages": {
     "specifiers": {
+      "jsr:@std/assert@0.226.0": "jsr:@std/assert@0.226.0",
       "jsr:@std/bytes": "jsr:@std/bytes@0.224.0",
       "jsr:@std/collections@1.0.0": "jsr:@std/collections@1.0.0",
+      "jsr:@std/internal@^1.0.0": "jsr:@std/internal@1.0.0",
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:zod": "npm:zod@3.23.8"
     },
     "jsr": {
+      "@std/assert@0.226.0": {
+        "integrity": "0dfb5f7c7723c18cec118e080fec76ce15b4c31154b15ad2bd74822603ef75b3",
+        "dependencies": [
+          "jsr:@std/internal@^1.0.0"
+        ]
+      },
       "@std/bytes@0.224.0": {
         "integrity": "a2250e1d0eb7d1c5a426f21267ab9bdeac2447fa87a3d0d1a467d3f7a6058e49"
       },
       "@std/collections@1.0.0": {
         "integrity": "8e4e07ce1df7badae20b80f2678c3ca3bc14cae5514c4e1817a4668ba8b1adf2"
+      },
+      "@std/internal@1.0.0": {
+        "integrity": "ac6a6dfebf838582c4b4f61a6907374e27e05bedb6ce276e0f1608fe84e7cd9a"
       }
     },
     "npm": {
@@ -35,6 +46,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@std/assert@0.226.0",
       "jsr:@std/collections@1.0.0"
     ]
   }

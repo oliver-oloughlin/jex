@@ -202,6 +202,7 @@ export type BodySource = "json" | "raw" | "URLSearchParameters" | "FormData"
 
 export type Schema<TInput, TOutput> = {
   parse(data: unknown): TOutput
+  transform?(input: TInput): TOutput
   _input: TInput
 }
 
@@ -252,6 +253,7 @@ export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
   client: ClientConfig<ResourceRecord<TFetcher>, TFetcher>
   resource: ResourceConfig<TFetcher>
   action: ActionConfig<TFetcher>
+  url: string
   method: keyof ActionsRecord<TFetcher>
   init: FetcherInit<TFetcher>
   args?: PossibleActionArgs

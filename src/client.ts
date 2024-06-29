@@ -76,6 +76,7 @@ function createAction(
         actionConfig,
         args,
         method,
+        url,
       )
 
       const res = await sendRequest(
@@ -149,9 +150,11 @@ function createUrl(
       })
   }
 
-  if (query) {
-    const parsed = (actionConfig.query?.parse(query) ??
-      query) as Record<string, any>
+  if (actionConfig.query) {
+    const parsed = (
+      actionConfig.query.transform?.(query ?? {}) ??
+        actionConfig.query.parse(query ?? {})
+    ) as Record<string, any>
 
     let isFirst = true
     Object
@@ -173,6 +176,7 @@ async function createInit(
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
   method: keyof ActionsRecord<Fetcher>,
+  url: string,
 ) {
   let init: RequestInit = {}
 
@@ -180,6 +184,7 @@ async function createInit(
     client: clientConfig,
     resource: resourceConfig,
     action: actionConfig,
+    url,
     method,
     init,
     args,
@@ -222,7 +227,11 @@ async function createInit(
       : {}),
   })
 
-  const parsedHeaders = actionConfig.headers?.parse(args?.headers ?? {}) ?? {}
+  const parsedHeaders =
+    actionConfig?.headers?.transform?.(args?.headers ?? {}) ??
+      actionConfig.headers?.parse(args?.headers ?? {}) ??
+      {}
+
   const stringifiedHeaders = stringifyEntries(parsedHeaders)
   init = deepMerge(init as object, args?.init ?? {} as object)
   init = deepMerge(init as object, { headers: stringifiedHeaders })
@@ -248,6 +257,7 @@ async function sendRequest(
     action: actionConfig,
     init,
     args,
+    url,
     method,
     res,
     async refetch(refetchInit) {
@@ -323,7 +333,9 @@ function createBody(
   }
 
   const bodySource = actionConfig.bodySource ?? "json"
-  const parsed = actionConfig.body.parse(args.body)
+
+  const parsed = actionConfig.body.transform?.(args.body) ??
+    actionConfig.body.parse(args.body)
 
   switch (bodySource) {
     case "json": {
@@ -382,7 +394,8 @@ async function parseData(
     await res.body?.cancel()
     return null
   }
+
   const dataSource = actionConfig.dataSource ?? "json"
   const data = await res[dataSource]()
-  return actionConfig.data.parse(data)
+  return actionConfig.data.transform?.(data) ?? actionConfig.data.parse(data)
 }
