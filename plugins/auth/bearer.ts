@@ -1,6 +1,6 @@
 import type { Plugin } from "../../src/types.ts"
 
-export function bearer(token: string) {
+export function bearerAuth(token: string) {
   return new BearerAuth(token)
 }
 
@@ -14,8 +14,10 @@ export class BearerAuth implements Plugin {
 
   before() {
     return {
-      headers: {
-        Authorization: this.token,
+      init: {
+        headers: {
+          Authorization: this.token,
+        },
       },
     }
   }

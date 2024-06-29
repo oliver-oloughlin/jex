@@ -1,2 +1,2 @@
 export { basicAuth } from "./basic.ts"
-export { bearer } from "./bearer.ts"
+export { bearerAuth } from "./bearer.ts"

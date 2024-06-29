@@ -47,7 +47,8 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@0.226.0",
-      "jsr:@std/collections@1.0.0"
+      "jsr:@std/collections@1.0.0",
+      "npm:zod@^3"
     ]
   }
 }

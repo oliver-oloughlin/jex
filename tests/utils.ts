@@ -1,4 +1,5 @@
 import {
+  type BodyfullActionConfig,
   type BodylessActionConfig,
   jex,
   type Plugin,
@@ -8,7 +9,7 @@ import {
 
 type Data = {
   args: Record<string, any>
-  data: any
+  data: string
   files: Record<string, any>
   form: Record<string, any>
   headers: Record<string, string>
@@ -21,6 +22,7 @@ type Data = {
 type Args = {
   plugins?: Plugin[]
   getAnything?: BodylessActionConfig
+  postAnything?: BodyfullActionConfig
   getAnythingWithParam?: BodylessActionConfig
 }
 
@@ -31,6 +33,11 @@ export function createClient<TArgs extends Args = Record<string, string>>(
     ...args?.getAnything,
     data: schema<Data>(),
   } as { data: Schema<Data, Data> } & TArgs["getAnything"]
+
+  const postAnything = {
+    ...args?.postAnything,
+    data: schema<Data>(),
+  } as { data: Schema<Data, Data> } & TArgs["postAnything"]
 
   const getAnythingWithParam = {
     ...args?.getAnythingWithParam,
@@ -45,6 +52,7 @@ export function createClient<TArgs extends Args = Record<string, string>>(
         path: "/anything",
         actions: {
           get: getAnything,
+          post: postAnything,
         },
       },
       anythingWithParam: {

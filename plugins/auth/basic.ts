@@ -22,8 +22,10 @@ export class BasicAuth implements Plugin {
 
   before() {
     return {
-      headers: {
-        Authorization: this.token,
+      init: {
+        headers: {
+          Authorization: this.token,
+        },
       },
     }
   }

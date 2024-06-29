@@ -1,4 +1,4 @@
-import { schema } from "../../mod.ts"
+import { type Plugin, schema } from "../../mod.ts"
 import { assert, assertEquals } from "@std/assert"
 import { createClient } from "../utils.ts"
 
@@ -15,6 +15,26 @@ type QueryOptional = {
 type QueryTransform = {
   foo: string
   bar: number
+}
+
+const q1: Plugin = {
+  before: () => {
+    return {
+      query: {
+        foo: "foo",
+      },
+    }
+  },
+}
+
+const q2: Plugin = {
+  before: () => {
+    return {
+      query: {
+        bar: "bar",
+      },
+    }
+  },
 }
 
 const standard = createClient({
@@ -36,6 +56,10 @@ const transform = createClient({
       bar: q.bar ?? 100,
     })),
   },
+})
+
+const plugins = createClient({
+  plugins: [q1, q2],
 })
 
 Deno.test("core - query", async (t) => {
@@ -79,4 +103,14 @@ Deno.test("core - query", async (t) => {
       assertEquals(query?.get("bar"), "100")
     },
   )
+
+  await t.step("Should add plugin queries", async () => {
+    const res = await plugins.anything.get()
+    assert(res.ok)
+
+    const query = new URL(res.raw?.url!).searchParams
+
+    assertEquals(query?.get("foo"), "foo")
+    assertEquals(query?.get("bar"), "bar")
+  })
 })

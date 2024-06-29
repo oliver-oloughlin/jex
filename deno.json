@@ -1,10 +1,14 @@
 {
   "name": "@olli/jex",
   "version": "0.0.0",
-  "exports": "./mod.ts",
+  "exports": {
+    ".": "./mod.ts",
+    "./auth": "./plugins/auth/index.ts"
+  },
   "imports": {
     "@std/collections": "jsr:@std/collections@1.0.0",
-    "@std/assert": "jsr:@std/assert@0.226.0"
+    "@std/assert": "jsr:@std/assert@0.226.0",
+    "zod": "npm:zod@^3"
   },
   "tasks": {
     "test": "deno test -A",

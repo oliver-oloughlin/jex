@@ -236,8 +236,8 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
   before?(
     ctx: PluginBeforeContext<TFetcher>,
   ):
-    | StrippedRequestInit<FetcherInit<TFetcher>>
-    | Promise<StrippedRequestInit<FetcherInit<TFetcher>>>
+    | PluginBeforeInit
+    | Promise<PluginBeforeInit>
     | void
     | Promise<void>
   after?(
@@ -247,6 +247,11 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
     | Promise<Response>
     | void
     | Promise<void>
+}
+
+export type PluginBeforeInit<TFetcher extends Fetcher = Fetcher> = {
+  init?: FetcherInit<TFetcher>
+  query?: Record<string, string>
 }
 
 export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {

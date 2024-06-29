@@ -9,6 +9,7 @@ import type {
   Plugin,
   PluginAfterContext,
   PluginBeforeContext,
+  PluginBeforeInit,
   PossibleActionArgs,
   ResourceConfig,
   ResourceRecord,
@@ -63,20 +64,12 @@ function createAction(
 ) {
   return async function (args?: PossibleActionArgs): Promise<Result<any>> {
     try {
-      const url = createUrl(
-        clientConfig,
-        resourceConfig,
-        actionConfig,
-        args,
-      )
-
-      const init = await createInit(
+      const { init, url } = await createInitAndUrl(
         clientConfig,
         resourceConfig,
         actionConfig,
         args,
         method,
-        url,
       )
 
       const res = await sendRequest(
@@ -170,15 +163,24 @@ function createUrl(
   return url
 }
 
-async function createInit(
+async function createInitAndUrl(
   clientConfig: ClientConfig<any, any>,
   resourceConfig: ResourceConfig<any>,
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
   method: keyof ActionsRecord<Fetcher>,
-  url: string,
 ) {
-  let init: RequestInit = {}
+  let url = createUrl(
+    clientConfig,
+    resourceConfig,
+    actionConfig,
+    args,
+  )
+
+  let pluginInit: Required<PluginBeforeInit> = {
+    init: {},
+    query: {},
+  }
 
   let ctx: PluginBeforeContext<Fetcher> = {
     client: clientConfig,
@@ -186,36 +188,37 @@ async function createInit(
     action: actionConfig,
     url,
     method,
-    init,
+    init: pluginInit.init,
     args,
   }
 
   for (const plugin of clientConfig.plugins ?? []) {
     ctx = {
       ...ctx,
-      init,
+      init: pluginInit.init,
     }
-    init = await applyBefore(init, ctx, plugin)
+    pluginInit = await applyBefore(pluginInit, ctx, plugin)
   }
 
   for (const plugin of resourceConfig.plugins ?? []) {
     ctx = {
       ...ctx,
-      init,
+      init: pluginInit.init,
     }
-    init = await applyBefore(init, ctx, plugin)
+    pluginInit = await applyBefore(pluginInit, ctx, plugin)
   }
 
   for (const plugin of actionConfig.plugins ?? []) {
     ctx = {
       ...ctx,
-      init,
+      init: pluginInit.init,
     }
-    init = await applyBefore(init, ctx, plugin)
+    pluginInit = await applyBefore(pluginInit, ctx, plugin)
   }
 
   const bodyData = createBody(actionConfig, args)
 
+  let init = pluginInit.init
   init = deepMerge(init as object, {
     body: bodyData.body,
     ...(bodyData.contentType
@@ -236,7 +239,15 @@ async function createInit(
   init = deepMerge(init as object, args?.init ?? {} as object)
   init = deepMerge(init as object, { headers: stringifiedHeaders })
   init = deepMerge(init as object, { method })
-  return init
+
+  Object.entries(pluginInit.query).forEach(([key, val]) => {
+    url += `${url.includes("?") ? "&" : "?"}${key}=${val.toString()}`
+  })
+
+  return {
+    init,
+    url,
+  }
 }
 
 async function sendRequest(
@@ -295,10 +306,10 @@ async function sendRequest(
 }
 
 async function applyBefore(
-  init: RequestInit,
+  init: Required<PluginBeforeInit>,
   ctx: PluginBeforeContext<Fetcher>,
   plugin: Plugin<Fetcher>,
-): Promise<RequestInit> {
+): Promise<Required<PluginBeforeInit>> {
   if (!plugin.before) return init
   const result = await plugin.before(ctx)
   if (result) return deepMerge(init as object, result)
