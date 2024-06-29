@@ -1,4 +1,4 @@
-import { basicAuth } from "../../plugins/auth/basic.ts"
+import { basicAuth } from "../../src/plugins/auth/basic.ts"
 import { assert, assertEquals } from "@std/assert"
 import { createClient } from "../utils.ts"
 

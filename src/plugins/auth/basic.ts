@@ -1,4 +1,4 @@
-import type { Plugin } from "../../src/types.ts"
+import type { Plugin } from "../../types.ts"
 
 export type BasicAuthOptions = {
   username: string

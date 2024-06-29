@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "exports": {
     ".": "./mod.ts",
-    "./auth": "./plugins/auth/index.ts"
+    "./auth": "./src/plugins/auth/index.ts"
   },
   "imports": {
     "@std/collections": "jsr:@std/collections@1.0.0",
