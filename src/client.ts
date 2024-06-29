@@ -89,18 +89,18 @@ function createAction(
         method,
       )
 
+      const data = await parseData(actionConfig, res)
+
       if (!res.ok) {
         return {
           ok: false,
           status: res.status,
           statusText: res.statusText,
           error: new HttpError(res.status, res.statusText),
-          data: null,
+          data,
           raw: res,
         }
       }
-
-      const data = await parseData(actionConfig, res)
 
       return {
         ok: true,
@@ -390,7 +390,7 @@ async function parseData(
   actionConfig: ActionConfig<any>,
   res: Response,
 ) {
-  if (!actionConfig.data) {
+  if (!res.ok || !actionConfig.data) {
     await res.body?.cancel()
     return null
   }
