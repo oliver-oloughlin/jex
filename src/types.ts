@@ -268,7 +268,9 @@ export type PluginAfterContext<TFetcher extends Fetcher = Fetcher> =
   & PluginBeforeContext<TFetcher>
   & {
     res: Response
-    refetch(init: StrippedRequestInit<FetcherInit<TFetcher>>): Promise<Response>
+    refetch(
+      init?: StrippedRequestInit<FetcherInit<TFetcher>>,
+    ): Promise<Response>
   }
 
 export type PathParams<TPath extends string> = TPath extends

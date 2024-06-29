@@ -63,3 +63,13 @@ export enum HttpStatusCode {
   NotExtended = 510,
   NetworkAuthenticationRequired = 511,
 }
+
+export const RETRYABLE_HTTP_STATUS_CODES = [
+  HttpStatusCode.RequestTimeout,
+  HttpStatusCode.TooEarly,
+  HttpStatusCode.TooManyRequests,
+  HttpStatusCode.InternalServerError,
+  HttpStatusCode.BadGateway,
+  HttpStatusCode.ServiceUnavailable,
+  HttpStatusCode.GatewayTimeout,
+]

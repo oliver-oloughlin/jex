@@ -272,7 +272,7 @@ async function sendRequest(
     method,
     res,
     async refetch(refetchInit) {
-      let i = deepMerge(init, refetchInit)
+      let i = deepMerge(init, refetchInit ?? {})
       i = deepMerge(i, { method })
       return await fetcher(url, init)
     },

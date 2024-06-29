@@ -5,11 +5,11 @@ export type BasicAuthOptions = {
   password: string
 }
 
-export function basicAuth(options: BasicAuthOptions) {
+export function basicAuth(options: BasicAuthOptions): BasicAuth {
   return new BasicAuth(options)
 }
 
-export class BasicAuth implements Plugin {
+class BasicAuth implements Plugin {
   private token: string
 
   constructor({

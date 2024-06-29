@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "exports": {
     ".": "./mod.ts",
-    "./auth": "./src/plugins/auth/index.ts"
+    "./auth": "./src/plugins/auth/index.ts",
+    "./throttle": "./src/plugins/throttle/index.ts",
+    "./retry": "./src/plugins/retry/index.ts"
   },
   "imports": {
     "@std/collections": "jsr:@std/collections@1.0.0",

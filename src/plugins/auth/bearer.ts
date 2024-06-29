@@ -1,10 +1,10 @@
 import type { Plugin } from "../../types.ts"
 
-export function bearerAuth(token: string) {
+export function bearerAuth(token: string): BearerAuth {
   return new BearerAuth(token)
 }
 
-export class BearerAuth implements Plugin {
+class BearerAuth implements Plugin {
   private token: string
 
   constructor(token: string) {
