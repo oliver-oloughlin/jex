@@ -24,7 +24,7 @@ class FixedThrottle implements Plugin {
     this.waiting = 0
   }
 
-  async before() {
+  async before(): Promise<void> {
     // Calculate current sleep time in milliseconds
     const now = Date.now()
     const diff = now - this.previousTimestamp

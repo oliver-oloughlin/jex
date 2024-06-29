@@ -14,7 +14,8 @@
   },
   "tasks": {
     "test": "deno test -A",
-    "prep": "deno lint && deno check ./**/*.ts"
+    "check": "deno check ./**/*.ts",
+    "prep": "deno lint && deno task check && deno lint && deno publish --dry-run --allow-dirty && deno task test"
   },
   "fmt": {
     "semiColons": false

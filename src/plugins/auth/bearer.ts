@@ -1,4 +1,4 @@
-import type { Plugin } from "../../types.ts"
+import type { Plugin, PluginBeforeInit } from "../../types.ts"
 
 export function bearerAuth(token: string): BearerAuth {
   return new BearerAuth(token)
@@ -12,7 +12,7 @@ class BearerAuth implements Plugin {
     else this.token = `Bearer ${token}`
   }
 
-  before() {
+  before(): PluginBeforeInit {
     return {
       init: {
         headers: {

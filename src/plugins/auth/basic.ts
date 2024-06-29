@@ -1,4 +1,4 @@
-import type { Plugin } from "../../types.ts"
+import type { Plugin, PluginBeforeInit } from "../../types.ts"
 
 export type BasicAuthOptions = {
   username: string
@@ -20,7 +20,7 @@ class BasicAuth implements Plugin {
     this.token = `Basic ${encoded}`
   }
 
-  before() {
+  before(): PluginBeforeInit {
     return {
       init: {
         headers: {
