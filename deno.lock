@@ -3,12 +3,9 @@
   "packages": {
     "specifiers": {
       "jsr:@std/assert@0.226.0": "jsr:@std/assert@0.226.0",
-      "jsr:@std/bytes": "jsr:@std/bytes@0.224.0",
       "jsr:@std/collections@1.0.0": "jsr:@std/collections@1.0.0",
       "jsr:@std/internal@^1.0.0": "jsr:@std/internal@1.0.0",
-      "jsr:@std/ulid@0.224.1": "jsr:@std/ulid@0.224.1",
-      "npm:@types/node": "npm:@types/node@18.16.19",
-      "npm:zod": "npm:zod@3.23.8"
+      "jsr:@std/ulid@0.224.1": "jsr:@std/ulid@0.224.1"
     },
     "jsr": {
       "@std/assert@0.226.0": {
@@ -16,9 +13,6 @@
         "dependencies": [
           "jsr:@std/internal@^1.0.0"
         ]
-      },
-      "@std/bytes@0.224.0": {
-        "integrity": "a2250e1d0eb7d1c5a426f21267ab9bdeac2447fa87a3d0d1a467d3f7a6058e49"
       },
       "@std/collections@1.0.0": {
         "integrity": "8e4e07ce1df7badae20b80f2678c3ca3bc14cae5514c4e1817a4668ba8b1adf2"
@@ -29,25 +23,9 @@
       "@std/ulid@0.224.1": {
         "integrity": "4de06fdb030ff3990b1b0344e330373c11ce6051ac449fc435667a485a6723fa"
       }
-    },
-    "npm": {
-      "@types/node@18.16.19": {
-        "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
-        "dependencies": {}
-      },
-      "zod@3.23.8": {
-        "integrity": "sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==",
-        "dependencies": {}
-      }
     }
   },
-  "remote": {
-    "https://esm.sh/jsr/@olli/kvdex@1.0.2": "a2633ec25946ed5ef16e61df2f8831f91c4ec37e7b64afe2abd5d80dbde3716f",
-    "https://esm.sh/v135/@jsr/olli__kvdex@1.0.2/denonext/olli__kvdex.mjs": "b3ffdfe174257d6569052cc2122fc8e8d8a18603533704ea7b39f269e07b4604",
-    "https://esm.sh/v135/@jsr/std__bytes@0.220.1/denonext/concat.js": "dcc78ae299e37e381e56c93d4c71866c98a7134f00bb8a810842cb8d25ff32da",
-    "https://esm.sh/v135/@jsr/std__collections@0.220.1/denonext/deep_merge.js": "4f1dbe8c749f4128097810f06c75589f5174081c6a2f9a69adead474d955e2cc",
-    "https://esm.sh/v135/@jsr/std__ulid@0.220.1/denonext/std__ulid.mjs": "b715c266f2bdab171a4de6acf6bd9285525e10b8536b2b47b6d2c15718449ec6"
-  },
+  "remote": {},
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@0.226.0",
