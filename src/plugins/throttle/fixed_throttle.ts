@@ -7,8 +7,6 @@ export function fixedThrottle(interval: number): FixedThrottle {
 
 /**
  * A fixed minimum delay between requests.
- *
- * Ignores time spent completing requests.
  */
 class FixedThrottle implements Plugin {
   private interval: number
@@ -20,22 +18,18 @@ class FixedThrottle implements Plugin {
    */
   constructor(interval: number) {
     this.interval = interval
-    this.previousTimestamp = 0
+    this.previousTimestamp = Date.now() - interval
     this.waiting = 0
   }
 
   async before(): Promise<void> {
-    // Calculate current sleep time in milliseconds
+    this.waiting += 1
     const now = Date.now()
     const diff = now - this.previousTimestamp
+    const sleepMs = this.interval * this.waiting - diff
     this.previousTimestamp = now
-    const sleepMs = this.interval * (1 + this.waiting) - diff
-
-    // Sleep if time is greater than zero
-    if (sleepMs > 0) {
-      this.waiting += 1
-      await sleep(sleepMs)
-      this.waiting -= 1
-    }
+    if (sleepMs > 0) await sleep(sleepMs)
+    this.previousTimestamp = Date.now()
+    this.waiting -= 1
   }
 }
