@@ -62,6 +62,12 @@ const plugins = createClient({
   plugins: [q1, q2],
 })
 
+const spacing = createClient({
+  getAnything: {
+    query: schema<QueryStandard>(),
+  },
+})
+
 Deno.test("core - query", async (t) => {
   await t.step("Should allow passing only required query", async () => {
     const res = await standard.anything.get({
@@ -112,5 +118,19 @@ Deno.test("core - query", async (t) => {
 
     assertEquals(query?.get("foo"), "foo")
     assertEquals(query?.get("bar"), "bar")
+  })
+
+  await t.step("Should successfully add query with spacing", async () => {
+    const res = await spacing.anything.get({
+      query: {
+        foo: "foo bar",
+      },
+    })
+
+    assert(res.ok)
+
+    const query = new URL(res.raw?.url!).searchParams
+
+    assertEquals(query?.get("foo"), "foo bar")
   })
 })

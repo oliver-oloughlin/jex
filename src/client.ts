@@ -268,7 +268,7 @@ async function sendRequest(
   id: string,
 ): Promise<Response> {
   const fetcher = clientConfig.fetcher ?? fetch
-  let res = await fetcher(url, init)
+  let res = await fetcher(encodeURI(url), init)
 
   let ctx: PluginAfterContext<Fetcher> = {
     id,
