@@ -15,6 +15,7 @@ export type ClientConfig<
   logger?: Logger
   fetcher?: TFetcher
   plugins?: Plugin<TFetcher>[]
+  generateId?: () => string
 }
 
 export type ResourceRecord<TFetcher extends Fetcher = Fetcher> = {
@@ -255,6 +256,7 @@ export type PluginBeforeInit<TFetcher extends Fetcher = Fetcher> = {
 }
 
 export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
+  id: string
   client: ClientConfig<ResourceRecord<TFetcher>, TFetcher>
   resource: ResourceConfig<TFetcher>
   action: ActionConfig<TFetcher>

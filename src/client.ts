@@ -16,6 +16,7 @@ import type {
   Result,
 } from "./types.ts"
 import { deepMerge } from "@std/collections"
+import { ulid } from "@std/ulid"
 
 export function jex<
   const TResourceRecord extends ResourceRecord<TFetcher>,
@@ -64,12 +65,15 @@ function createAction(
 ) {
   return async function (args?: PossibleActionArgs): Promise<Result<any>> {
     try {
+      const id = clientConfig.generateId?.() ?? ulid()
+
       const { init, url } = await createInitAndUrl(
         clientConfig,
         resourceConfig,
         actionConfig,
         args,
         method,
+        id,
       )
 
       const res = await sendRequest(
@@ -80,6 +84,7 @@ function createAction(
         init,
         url,
         method,
+        id,
       )
 
       const data = await parseData(actionConfig, res)
@@ -169,6 +174,7 @@ async function createInitAndUrl(
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
   method: keyof ActionsRecord<Fetcher>,
+  id: string,
 ) {
   let url = createUrl(
     clientConfig,
@@ -183,6 +189,7 @@ async function createInitAndUrl(
   }
 
   let ctx: PluginBeforeContext<Fetcher> = {
+    id,
     client: clientConfig,
     resource: resourceConfig,
     action: actionConfig,
@@ -258,11 +265,13 @@ async function sendRequest(
   init: RequestInit,
   url: string,
   method: keyof ActionsRecord<Fetcher>,
+  id: string,
 ): Promise<Response> {
   const fetcher = clientConfig.fetcher ?? fetch
   let res = await fetcher(url, init)
 
   let ctx: PluginAfterContext<Fetcher> = {
+    id,
     client: clientConfig,
     resource: resourceConfig,
     action: actionConfig,

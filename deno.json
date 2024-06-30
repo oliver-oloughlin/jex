@@ -10,7 +10,8 @@
   "imports": {
     "@std/collections": "jsr:@std/collections@1.0.0",
     "@std/assert": "jsr:@std/assert@0.226.0",
-    "zod": "npm:zod@^3"
+    "zod": "npm:zod@^3",
+    "@std/ulid": "jsr:@std/ulid@0.224.1"
   },
   "tasks": {
     "test": "deno test -A",
