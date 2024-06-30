@@ -2,11 +2,11 @@ import { RETRYABLE_HTTP_STATUS_CODES } from "../../http_status_code.ts"
 import type { Fetcher, Plugin, PluginAfterContext } from "../../types.ts"
 import { sleep } from "../../utils.ts"
 
-export function progressiveRetry(retries: number[]): ProgressiveRetry {
-  return new ProgressiveRetry(retries)
+export function retryList(retries: number[]): RetryList {
+  return new RetryList(retries)
 }
 
-class ProgressiveRetry implements Plugin {
+class RetryList implements Plugin {
   private retries: number[]
 
   constructor(retries: number[]) {

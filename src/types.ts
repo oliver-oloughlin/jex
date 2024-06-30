@@ -10,11 +10,38 @@ export type ClientConfig<
   TResourceConfigs extends ResourceRecord<TFetcher>,
   TFetcher extends Fetcher,
 > = {
+  /**
+   * Base API url.
+   *
+   * @example "https://domain.com/api"
+   */
   baseUrl: string
+
+  /** Record of configured HTTP resources */
   resources: TResourceConfigs
+
+  /** Logger used for logging outgoing and incoming requests. */
   logger?: Logger
+
+  /**
+   * Fetcher function used to send HTTP requests.
+   *
+   * Uses global `fetch()` function by default.
+   *
+   * @default fetch()
+   */
   fetcher?: TFetcher
+
+  /** List of plugins to be applied for every resource. */
   plugins?: Plugin<TFetcher>[]
+
+  /**
+   * Generator function used to generate new request IDs.
+   *
+   * Uses `ulid()` by default.
+   *
+   * @default ulid()
+   */
   generateId?: () => string
 }
 
@@ -234,6 +261,13 @@ export type FetcherInit<TFetcher extends Fetcher = Fetcher> = Exclude<
 >
 
 export type Plugin<TFetcher extends Fetcher = Fetcher> = {
+  /**
+   * Runs before a request is sent.
+   *
+   * Can return either void or a PluginBeforeInit object.
+   *
+   * @param ctx - Pre-request context.
+   */
   before?(
     ctx: PluginBeforeContext<TFetcher>,
   ):
@@ -241,6 +275,14 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
     | Promise<PluginBeforeInit>
     | void
     | Promise<void>
+
+  /**
+   * Runs after a response is received.
+   *
+   * Can return either void or a response object.
+   *
+   * @param ctx - Post-request context.
+   */
   after?(
     ctx: PluginAfterContext<TFetcher>,
   ):
