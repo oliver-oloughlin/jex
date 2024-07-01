@@ -59,7 +59,7 @@ Deno.test("plugins - auth", async (t) => {
     await t.step(
       "Should set Authorization header as bearer token (with 'Basic')",
       async () => {
-        const res = await bearerWithout.anything.get()
+        const res = await bearerWith.anything.get()
         assert(res.ok)
         const auth = res.data.headers.Authorization
         assert(auth.startsWith("Bearer "))

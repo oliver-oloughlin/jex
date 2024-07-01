@@ -174,7 +174,7 @@ async function createInitAndUrl(
   method: keyof ActionsRecord<Fetcher>,
   id: string,
 ) {
-  let url = createUrl(
+  const url = createUrl(
     clientConfig,
     resourceConfig,
     actionConfig,
