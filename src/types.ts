@@ -20,8 +20,21 @@ export type ClientConfig<
   /** Record of configured HTTP resources */
   resources: TResourceConfigs
 
-  /** Logger used for logging outgoing and incoming requests. */
+  /**
+   * Logger used for logging outgoing and incoming requests.
+   *
+   * Is also passed to plugins.
+   */
   logger?: Logger
+
+  /**
+   * Whether to disable the default logging or not.
+   *
+   * Is `false` by default.
+   *
+   * @default false
+   */
+  disableDefaultLogging?: boolean
 
   /**
    * Fetcher function used to send HTTP requests.
@@ -302,7 +315,7 @@ export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
   client: ClientConfig<ResourceRecord<TFetcher>, TFetcher>
   resource: ResourceConfig<TFetcher>
   action: ActionConfig<TFetcher>
-  url: string
+  url: URL
   method: keyof ActionsRecord<TFetcher>
   init: FetcherInit<TFetcher>
   args?: PossibleActionArgs
