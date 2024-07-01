@@ -77,9 +77,7 @@ Deno.test("core - query", async (t) => {
     })
 
     assert(res.ok)
-
     const query = new URL(res.raw?.url!).searchParams
-
     assertEquals(query?.get("foo"), "foo")
     assertEquals(query?.get("bar"), null)
   })
@@ -89,9 +87,7 @@ Deno.test("core - query", async (t) => {
     async () => {
       const res = await optional.anything.get()
       assert(res.ok)
-
       const query = new URL(res.raw?.url!).searchParams
-
       assertEquals(query?.get("foo"), null)
       assertEquals(query?.get("bar"), null)
     },
@@ -102,9 +98,7 @@ Deno.test("core - query", async (t) => {
     async () => {
       const res = await transform.anything.get()
       assert(res.ok)
-
       const query = new URL(res.raw?.url!).searchParams
-
       assertEquals(query?.get("foo"), "foo")
       assertEquals(query?.get("bar"), "100")
     },
@@ -113,9 +107,7 @@ Deno.test("core - query", async (t) => {
   await t.step("Should add plugin queries", async () => {
     const res = await plugins.anything.get()
     assert(res.ok)
-
     const query = new URL(res.raw?.url!).searchParams
-
     assertEquals(query?.get("foo"), "foo")
     assertEquals(query?.get("bar"), "bar")
   })
@@ -128,9 +120,7 @@ Deno.test("core - query", async (t) => {
     })
 
     assert(res.ok)
-
     const query = new URL(res.raw?.url!).searchParams
-
     assertEquals(query?.get("foo"), "foo bar")
   })
 })

@@ -128,7 +128,7 @@ function createUrl(
   const query = args?.query
   const params = args?.params
 
-  let url = baseUrl
+  let urlPath = baseUrl
     .replace(/[/]{1}$/, "")
     .concat("/")
     .concat(
@@ -141,12 +141,14 @@ function createUrl(
     Object
       .entries(params)
       .forEach(([name, value]) => {
-        url = url.replace(`:${name}`, value.toString())
-        url = url.replace(`[${name}]`, value.toString())
-        url = url.replace(`{${name}}`, value.toString())
-        url = url.replace(`<${name}>`, value.toString())
+        urlPath = urlPath.replace(`:${name}`, value.toString())
+        urlPath = urlPath.replace(`[${name}]`, value.toString())
+        urlPath = urlPath.replace(`{${name}}`, value.toString())
+        urlPath = urlPath.replace(`<${name}>`, value.toString())
       })
   }
+
+  const url = new URL(urlPath)
 
   if (actionConfig.query) {
     const parsed = (
@@ -154,14 +156,10 @@ function createUrl(
         actionConfig.query.parse(query ?? {})
     ) as Record<string, any>
 
-    let isFirst = true
     Object
       .entries(parsed)
       .forEach(([name, value]) => {
-        url += isFirst
-          ? `?${name}=${value.toString()}`
-          : `&${name}=${value.toString()}`
-        isFirst = false
+        url.searchParams.append(name, value.toString())
       })
   }
 
@@ -248,7 +246,7 @@ async function createInitAndUrl(
   init = deepMerge(init as object, { method })
 
   Object.entries(pluginInit.query).forEach(([key, val]) => {
-    url += `${url.includes("?") ? "&" : "?"}${key}=${val.toString()}`
+    url.searchParams.append(key, val.toString())
   })
 
   return {
@@ -263,12 +261,12 @@ async function sendRequest(
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
   init: RequestInit,
-  url: string,
+  url: URL,
   method: keyof ActionsRecord<Fetcher>,
   id: string,
 ): Promise<Response> {
   const fetcher = clientConfig.fetcher ?? fetch
-  let res = await fetcher(encodeURI(url), init)
+  let res = await fetcher(url, init)
 
   let ctx: PluginAfterContext<Fetcher> = {
     id,
