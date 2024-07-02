@@ -171,19 +171,26 @@ export type ActionArgs<
     WithOptionalProperty<{ params: { [K in TPathParams]: string } }>
   > extends false
     ? WithOptionalProperty<{ params: { [K in TPathParams]: string } }>
-    : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
-  & (TActionConfig["query"] extends Schema<any, any>
-    ? WithOptionalProperty<{ query: Input<TActionConfig["query"]> }>
-    : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
-  & (TActionConfig["headers"] extends Schema<any, any>
-    ? WithOptionalProperty<{ headers: Input<TActionConfig["headers"]> }>
-    : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
+    : EmptyObject)
+  & ParseArg<TActionConfig, "query">
+  & ParseArg<TActionConfig, "headers">
   & (TActionConfig extends BodyfullActionConfig<TFetcher>
-    ? (TActionConfig["body"] extends Schema<any, any>
-      ? WithOptionalProperty<{ body: Input<TActionConfig["body"]> }>
-      : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
-    : { init?: StrippedRequestInit<FetcherInit<TFetcher>> })
+    ? ParseArg<TActionConfig, "body">
+    : EmptyObject)
   & { init?: StrippedRequestInit<FetcherInit<TFetcher>> }
+
+export type ParseArg<
+  T,
+  K extends keyof T,
+> = T[K] extends Schema<any, any> ? (
+    IsEmptyObject<T[K]> extends false ? (
+        IsOptionalObject<Input<T[K]>> extends true
+          ? { [key in K]?: Input<T[K]> }
+          : { [key in K]: Input<T[K]> }
+      )
+      : EmptyObject
+  )
+  : EmptyObject
 
 /*********************/
 /*                   */
@@ -191,15 +198,16 @@ export type ActionArgs<
 /*                   */
 /*********************/
 
-export type PossibleActionArgs = ActionArgs<
-  "param",
-  {
-    query: Schema<Record<string, never>, Record<string, never>>
-    body: Schema<Record<string, never>, Record<string, never>>
-    headers: Schema<Record<string, never>, Record<string, never>>
-  },
-  Fetcher
->
+const __EMPTY_OBJECT__ = {}
+export type EmptyObject = typeof __EMPTY_OBJECT__
+
+export type PossibleActionArgs = {
+  query?: Record<string, string>
+  body?: Record<string, string>
+  headers?: Record<string, string>
+  params?: Record<string, string>
+  init?: RequestInit
+}
 
 export type WithOptionalProperty<T> = IsOptionalObject<T[keyof T]> extends true
   ? { [Key in keyof T]?: T[Key] }
