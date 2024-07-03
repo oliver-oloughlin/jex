@@ -23,7 +23,7 @@ export function jex<
   const TFetcher extends Fetcher = Fetcher,
 >(
   config: ClientConfig<TResourceRecord, TFetcher>,
-): Client<TResourceRecord, TFetcher> {
+) {
   const resourceEntries = Object
     .entries(config.resources)
     .map((

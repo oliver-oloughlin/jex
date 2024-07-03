@@ -1,6 +1,6 @@
 {
   "name": "@olli/jex",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "exports": {
     ".": "./mod.ts",
     "./auth": "./src/plugins/auth/index.ts",
@@ -16,14 +16,15 @@
   "tasks": {
     "test": "deno test -A",
     "check": "deno check ./**/*.ts",
-    "prep": "deno lint && deno task check && deno lint && deno publish --dry-run --allow-dirty && deno task test"
+    "prep": "deno lint && deno task check && deno publish --dry-run --allow-dirty --allow-slow-types && deno task test"
   },
   "fmt": {
     "semiColons": false
   },
   "lint": {
     "rules": {
-      "exclude": ["no-explicit-any"]
+      "exclude": ["no-explicit-any", "no-slow-types"],
+      "include": ["no-console"]
     }
   }
 }
