@@ -16,7 +16,8 @@
   "tasks": {
     "test": "deno test -A",
     "check": "deno check ./**/*.ts",
-    "prep": "deno lint && deno task check && deno publish --dry-run --allow-dirty --allow-slow-types && deno task test"
+    "publish": "deno publish --allow-slow-types",
+    "prep": "deno lint && deno task check && deno task publish --allow-dirty --dry-run && deno task test"
   },
   "fmt": {
     "semiColons": false
