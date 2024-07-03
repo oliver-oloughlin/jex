@@ -31,7 +31,7 @@ jobs:
         run: deno lint
 
       - name: Test publish
-        run: deno publish --dry-run --allow-slow-types
+        run: deno task publish --dry-run
 
       - name: Run tests
         run: deno task test
