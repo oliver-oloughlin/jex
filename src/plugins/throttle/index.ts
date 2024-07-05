@@ -16,7 +16,7 @@
  *   baseUrl: "https://domain.com/api",
  *   // Send requests with a minimum of 500ms interval between them
  *   plugins: [fixedThrottle(500)],
- *   resources: {
+ *   endpoints: {
  *     // ...
  *   },
  * })

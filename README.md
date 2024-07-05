@@ -48,19 +48,16 @@ type Data = {
 
 const client = jex({
   baseUrl: "https://domain.com/api",
-  resources: {
-    foo: {
-      path: "/foo",
-      actions: {
-        get: {
-          data: schema<Data>(),
-        },
+  endpoints: {
+    "/foo": {
+      get: {
+        data: schema<Data>(),
       },
     },
   },
 })
 
-const result = await client.foo.get()
+const result = await client["/foo"].get()
 if (result.ok) {
   // Inferred as { foo: string, bar: number }
   const data = result.data
@@ -75,27 +72,20 @@ if (result.ok) {
 ```ts
 import { jex, schema } from "@olli/jex"
 
-type Body = {
-  baz: boolean
-}
-
 const client = jex({
   baseUrl: "https://domain.com/api",
-  resources: {
-    foo: {
-      // Also supports notations: "/foo/[bar]", "/foo/{bar}", "/foo/<bar>"
-      path: "/foo/:bar",
-      actions: {
-        post: {
-          body: schema<Body>(),
-          query: schema<{ q: string; n?: number }>(),
-        },
+  endpoints: {
+    // Also supports notations: "/foo/[bar]", "/foo/{bar}", "/foo/<bar>"
+    "/foo/:bar": {
+      post: {
+        body: schema<{ baz: boolean }>(),
+        query: schema<{ q: string; n?: number }>(),
       },
     },
   },
 })
 
-const result = await client.foo.post({
+const result = await client["/foo/:bar"].post({
   params: {
     bar: "bar",
   },
@@ -126,13 +116,10 @@ const DataSchema = z.object({
 
 const client = jex({
   baseUrl: "https://domain.com/api",
-  resources: {
-    foo: {
-      path: "/foo",
-      actions: {
-        get: {
-          data: DataSchema,
-        },
+  endpoints: {
+    "/foo": {
+      get: {
+        data: DataSchema,
       },
     },
   },

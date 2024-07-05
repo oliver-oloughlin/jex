@@ -15,7 +15,7 @@
  * const client = jex({
  *   baseUrl: "https://domain.com/api",
  *   plugins: [basicAuth({ username: "user", password: "pass" })],
- *   resources: {
+ *   endpoints: {
  *     // ...
  *   },
  * })
@@ -33,7 +33,7 @@
  * const client = jex({
  *   baseUrl: "https://domain.com/api",
  *   plugins: [bearerAuth("token")],
- *   resources: {
+ *   endpoints: {
  *     // ...
  *   },
  * })

@@ -16,7 +16,7 @@
  *   baseUrl: "https://domain.com/api",
  *   // Retry up to 3 times, waiting 500ms, then 1000ms and then 3000ms
  *   plugins: [retryList([500, 1000, 3000])],
- *   resources: {
+ *   endpoints: {
  *     // ...
  *   },
  * })

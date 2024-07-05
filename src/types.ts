@@ -7,7 +7,7 @@
 import type { HttpStatusCode } from "./http_status_code.ts"
 
 export type ClientConfig<
-  TResourceConfigs extends ResourceRecord<TFetcher>,
+  TEndpointRecord extends EndpointRecord<TFetcher>,
   TFetcher extends Fetcher,
 > = {
   /**
@@ -17,8 +17,8 @@ export type ClientConfig<
    */
   baseUrl: string
 
-  /** Record of configured HTTP resources */
-  resources: TResourceConfigs
+  /** Record of configured HTTP endpoints */
+  endpoints: TEndpointRecord
 
   /**
    * Logger used for logging outgoing and incoming requests.
@@ -45,7 +45,7 @@ export type ClientConfig<
    */
   fetcher?: TFetcher
 
-  /** List of plugins to be applied for every resource. */
+  /** List of plugins to be applied for every endpoint. */
   plugins?: Plugin<TFetcher>[]
 
   /**
@@ -58,8 +58,8 @@ export type ClientConfig<
   idGenerator?: () => string
 }
 
-export type ResourceRecord<TFetcher extends Fetcher = Fetcher> = {
-  [K in string]: ResourceConfig<TFetcher>
+export type EndpointRecord<TFetcher extends Fetcher = Fetcher> = {
+  [K in string]: EndpointConfig<TFetcher>
 }
 
 export type BodylessMethod = "get" | "head"
@@ -68,7 +68,7 @@ export type BodyfullMethod = "post" | "delete" | "patch" | "put" | "options"
 
 export type Method = BodylessMethod | BodyfullMethod
 
-export type ResourceConfig<TFetcher extends Fetcher = Fetcher> =
+export type EndpointConfig<TFetcher extends Fetcher = Fetcher> =
   & {
     [K in BodylessMethod]?: BodylessActionConfig
   }
@@ -105,25 +105,25 @@ export type ActionConfig<TFetcher extends Fetcher = Fetcher> =
 /********************/
 
 export type Client<
-  TResourceConfigs extends ResourceRecord<TFetcher>,
+  TEndpointRecord extends EndpointRecord<TFetcher>,
   TFetcher extends Fetcher = Fetcher,
 > = {
-  [K in Extract<keyof TResourceConfigs, string>]: Resource<
+  [K in Extract<keyof TEndpointRecord, string>]: Endpoint<
     K,
-    TResourceConfigs[K],
+    TEndpointRecord[K],
     TFetcher
   >
 }
 
-export type Resource<
+export type Endpoint<
   TPath extends string,
-  TResourceConfig extends ResourceConfig<TFetcher>,
+  TEndpointConfig extends EndpointConfig<TFetcher>,
   TFetcher extends Fetcher = Fetcher,
 > = {
-  [K in KeysOfThatDontExtend<Omit<TResourceConfig, "plugins">, undefined>]:
-    TResourceConfig[K] extends ActionConfig<TFetcher> ? Action<
+  [K in KeysOfThatDontExtend<Omit<TEndpointConfig, "plugins">, undefined>]:
+    TEndpointConfig[K] extends ActionConfig<TFetcher> ? Action<
         PathParams<TPath>,
-        TResourceConfig[K],
+        TEndpointConfig[K],
         TFetcher
       >
       : never
@@ -326,8 +326,8 @@ export type PluginBeforeInit<TFetcher extends Fetcher = Fetcher> = {
 
 export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
   id: string
-  client: ClientConfig<ResourceRecord<TFetcher>, TFetcher>
-  resource: ResourceConfig<TFetcher>
+  client: ClientConfig<EndpointRecord<TFetcher>, TFetcher>
+  endpoint: EndpointConfig<TFetcher>
   action: ActionConfig<TFetcher>
   url: URL
   method: Method

@@ -4,6 +4,8 @@ import type {
   BodyfullActionConfig,
   Client,
   ClientConfig,
+  EndpointConfig,
+  EndpointRecord,
   Fetcher,
   Method,
   Plugin,
@@ -11,38 +13,36 @@ import type {
   PluginBeforeContext,
   PluginBeforeInit,
   PossibleActionArgs,
-  ResourceConfig,
-  ResourceRecord,
   Result,
 } from "./types.ts"
 import { deepMerge } from "@std/collections"
 import { ulid } from "@std/ulid"
 
 export function jex<
-  const TResourceRecord extends ResourceRecord<TFetcher>,
+  const TEndpointRecord extends EndpointRecord<TFetcher>,
   const TFetcher extends Fetcher = Fetcher,
 >(
-  config: ClientConfig<TResourceRecord, TFetcher>,
+  config: ClientConfig<TEndpointRecord, TFetcher>,
 ) {
-  const resourceEntries = Object
-    .entries(config.resources)
+  const endpointEntries = Object
+    .entries(config.endpoints)
     .map((
-      [key, resourceConfig],
-    ) => [key, createResource(key, config, resourceConfig)])
+      [key, endpointConfig],
+    ) => [key, createEndpoint(key, config, endpointConfig)])
 
-  return Object.fromEntries(resourceEntries) as Client<
-    TResourceRecord,
+  return Object.fromEntries(endpointEntries) as Client<
+    TEndpointRecord,
     TFetcher
   >
 }
 
-function createResource(
+function createEndpoint(
   path: string,
   clientConfig: ClientConfig<any, any>,
-  resourceConfig: ResourceConfig<any>,
+  endpointConfig: EndpointConfig<any>,
 ) {
   const actionEntries = Object
-    .entries(resourceConfig)
+    .entries(endpointConfig)
     .filter(([key]) => key !== "plugins")
     .map((
       [key, actionConfig],
@@ -51,7 +51,7 @@ function createResource(
       createAction(
         path,
         clientConfig,
-        resourceConfig,
+        endpointConfig,
         actionConfig as ActionConfig,
         key as Method,
       ),
@@ -63,7 +63,7 @@ function createResource(
 function createAction(
   path: string,
   clientConfig: ClientConfig<any, Fetcher>,
-  resourceConfig: ResourceConfig<any>,
+  endpointConfig: EndpointConfig<any>,
   actionConfig: ActionConfig<any>,
   method: Method,
 ) {
@@ -74,7 +74,7 @@ function createAction(
       const { init, url } = await createInitAndUrl(
         path,
         clientConfig,
-        resourceConfig,
+        endpointConfig,
         actionConfig,
         args,
         method,
@@ -83,7 +83,7 @@ function createAction(
 
       const res = await sendRequest(
         clientConfig,
-        resourceConfig,
+        endpointConfig,
         actionConfig,
         args,
         init,
@@ -173,7 +173,7 @@ function createUrl(
 async function createInitAndUrl(
   path: string,
   clientConfig: ClientConfig<any, any>,
-  resourceConfig: ResourceConfig<any>,
+  endpointConfig: EndpointConfig<any>,
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
   method: Method,
@@ -194,7 +194,7 @@ async function createInitAndUrl(
   let ctx: PluginBeforeContext<Fetcher> = {
     id,
     client: clientConfig,
-    resource: resourceConfig,
+    endpoint: endpointConfig,
     action: actionConfig,
     url,
     method,
@@ -210,7 +210,7 @@ async function createInitAndUrl(
     pluginInit = await applyBefore(pluginInit, ctx, plugin)
   }
 
-  for (const plugin of resourceConfig.plugins ?? []) {
+  for (const plugin of endpointConfig.plugins ?? []) {
     ctx = {
       ...ctx,
       init: pluginInit.init,
@@ -262,7 +262,7 @@ async function createInitAndUrl(
 
 async function sendRequest(
   clientConfig: ClientConfig<any, any>,
-  resourceConfig: ResourceConfig<any>,
+  endpointConfig: EndpointConfig<any>,
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
   init: RequestInit,
@@ -276,7 +276,7 @@ async function sendRequest(
   let ctx: PluginAfterContext<Fetcher> = {
     id,
     client: clientConfig,
-    resource: resourceConfig,
+    endpoint: endpointConfig,
     action: actionConfig,
     init,
     args,
@@ -298,7 +298,7 @@ async function sendRequest(
     res = await applyAfter(ctx, plugin)
   }
 
-  for (const plugin of resourceConfig.plugins ?? []) {
+  for (const plugin of endpointConfig.plugins ?? []) {
     ctx = {
       ...ctx,
       res,
