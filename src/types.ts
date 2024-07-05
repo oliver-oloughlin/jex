@@ -120,13 +120,17 @@ export type Endpoint<
   TEndpointConfig extends EndpointConfig<TFetcher>,
   TFetcher extends Fetcher = Fetcher,
 > = {
-  [K in KeysOfThatDontExtend<Omit<TEndpointConfig, "plugins">, undefined>]:
-    TEndpointConfig[K] extends ActionConfig<TFetcher> ? Action<
-        PathParams<TPath>,
-        TEndpointConfig[K],
-        TFetcher
-      >
-      : never
+  [
+    K in KeysOfThatDontExtend<
+      Pick<TEndpointConfig, Extract<keyof TEndpointConfig, Method>>,
+      undefined
+    >
+  ]: TEndpointConfig[K] extends ActionConfig<TFetcher> ? Action<
+      PathParams<TPath>,
+      TEndpointConfig[K],
+      TFetcher
+    >
+    : never
 }
 
 export type Action<
