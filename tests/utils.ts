@@ -47,19 +47,13 @@ export function createClient<TArgs extends Args = Record<string, string>>(
   return jex({
     baseUrl: "https://httpbin.org",
     plugins: args?.plugins,
-    resources: {
-      anything: {
-        path: "/anything",
-        actions: {
-          get: getAnything,
-          post: postAnything,
-        },
+    endpoints: {
+      "/anything": {
+        get: getAnything,
+        post: postAnything,
       },
-      anythingWithParam: {
-        path: "/anything/{anything}",
-        actions: {
-          get: getAnythingWithParam,
-        },
+      "/anything/{anything}": {
+        get: getAnythingWithParam,
       },
     },
   })

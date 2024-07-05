@@ -48,25 +48,25 @@ const raw = createClient({
 
 Deno.test("core - body", async (t) => {
   await t.step("Should send data as json", async () => {
-    const res = await json.anything.post({ body })
+    const res = await json["/anything"].post({ body })
     assert(res.ok)
     assertEquals(res.data.json, body)
   })
 
   await t.step("Should send data as URLSearchParams", async () => {
-    const res = await search.anything.post({ body })
+    const res = await search["/anything"].post({ body })
     assert(res.ok)
     assertEquals(res.data.form, stringifiedEntriesBody)
   })
 
   await t.step("Should send data as FormData", async () => {
-    const res = await form.anything.post({ body })
+    const res = await form["/anything"].post({ body })
     assert(res.ok)
     assertEquals(res.data.form, stringifiedEntriesBody)
   })
 
   await t.step("Should send data as raw (text)", async () => {
-    const res = await raw.anything.post({ body: JSON.stringify(body) })
+    const res = await raw["/anything"].post({ body: JSON.stringify(body) })
     assert(res.ok)
     assertEquals(JSON.parse(res.data.data), body)
   })

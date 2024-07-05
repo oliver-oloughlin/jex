@@ -70,7 +70,7 @@ const spacing = createClient({
 
 Deno.test("core - query", async (t) => {
   await t.step("Should allow passing only required query", async () => {
-    const res = await standard.anything.get({
+    const res = await standard["/anything"].get({
       query: {
         foo: "foo",
       },
@@ -85,7 +85,7 @@ Deno.test("core - query", async (t) => {
   await t.step(
     "Should allow passing no query when all are optional",
     async () => {
-      const res = await optional.anything.get()
+      const res = await optional["/anything"].get()
       assert(res.ok)
       const query = new URL(res.raw?.url!).searchParams
       assertEquals(query?.get("foo"), null)
@@ -96,7 +96,7 @@ Deno.test("core - query", async (t) => {
   await t.step(
     "Should transform to default query when no query is given",
     async () => {
-      const res = await transform.anything.get()
+      const res = await transform["/anything"].get()
       assert(res.ok)
       const query = new URL(res.raw?.url!).searchParams
       assertEquals(query?.get("foo"), "foo")
@@ -105,7 +105,7 @@ Deno.test("core - query", async (t) => {
   )
 
   await t.step("Should add plugin queries", async () => {
-    const res = await plugins.anything.get()
+    const res = await plugins["/anything"].get()
     assert(res.ok)
     const query = new URL(res.raw?.url!).searchParams
     assertEquals(query?.get("foo"), "foo")
@@ -113,7 +113,7 @@ Deno.test("core - query", async (t) => {
   })
 
   await t.step("Should successfully add query with spacing", async () => {
-    const res = await spacing.anything.get({
+    const res = await spacing["/anything"].get({
       query: {
         foo: "foo bar",
       },

@@ -7,7 +7,7 @@
 import type { HttpStatusCode } from "./http_status_code.ts"
 
 export type ClientConfig<
-  TResourceConfigs extends ResourceRecord<TFetcher>,
+  TEndpointRecord extends EndpointRecord<TFetcher>,
   TFetcher extends Fetcher,
 > = {
   /**
@@ -17,8 +17,8 @@ export type ClientConfig<
    */
   baseUrl: string
 
-  /** Record of configured HTTP resources */
-  resources: TResourceConfigs
+  /** Record of configured HTTP endpoints */
+  endpoints: TEndpointRecord
 
   /**
    * Logger used for logging outgoing and incoming requests.
@@ -45,38 +45,39 @@ export type ClientConfig<
    */
   fetcher?: TFetcher
 
-  /** List of plugins to be applied for every resource. */
+  /** List of plugins to be applied for every endpoint. */
   plugins?: Plugin<TFetcher>[]
 
   /**
-   * Generator function used to generate new request IDs.
+   * Generator function used to create new request IDs.
    *
    * Uses `ulid()` by default.
    *
    * @default ulid()
    */
-  generateId?: () => string
+  idGenerator?: () => string
 }
 
-export type ResourceRecord<TFetcher extends Fetcher = Fetcher> = {
-  [K in string]: ResourceConfig<TFetcher>
+export type EndpointRecord<TFetcher extends Fetcher = Fetcher> = {
+  [K in string]: EndpointConfig<TFetcher>
 }
 
-export type ResourceConfig<TFetcher extends Fetcher = Fetcher> = {
-  path: string
-  actions: ActionsRecord<TFetcher>
-  plugins?: Plugin<TFetcher>[]
-}
+export type BodylessMethod = "get" | "head"
 
-export type ActionsRecord<TFetcher extends Fetcher = Fetcher> = {
-  get?: BodylessActionConfig<TFetcher>
-  head?: BodylessActionConfig<TFetcher>
-  post?: BodyfullActionConfig<TFetcher>
-  delete?: BodyfullActionConfig<TFetcher>
-  patch?: BodyfullActionConfig<TFetcher>
-  put?: BodyfullActionConfig<TFetcher>
-  options?: BodyfullActionConfig<TFetcher>
-}
+export type BodyfullMethod = "post" | "delete" | "patch" | "put" | "options"
+
+export type Method = BodylessMethod | BodyfullMethod
+
+export type EndpointConfig<TFetcher extends Fetcher = Fetcher> =
+  & {
+    [K in BodylessMethod]?: BodylessActionConfig
+  }
+  & {
+    [K in BodyfullMethod]?: BodyfullActionConfig
+  }
+  & {
+    plugins?: Plugin<TFetcher>[]
+  }
 
 export type BodylessActionConfig<TFetcher extends Fetcher = Fetcher> = {
   data?: Schema<any, any>
@@ -104,23 +105,32 @@ export type ActionConfig<TFetcher extends Fetcher = Fetcher> =
 /********************/
 
 export type Client<
-  TResourceConfigs extends ResourceRecord<TFetcher>,
+  TEndpointRecord extends EndpointRecord<TFetcher>,
   TFetcher extends Fetcher = Fetcher,
 > = {
-  [K in keyof TResourceConfigs]: Resource<TResourceConfigs[K], TFetcher>
+  [K in Extract<keyof TEndpointRecord, string>]: Endpoint<
+    K,
+    TEndpointRecord[K],
+    TFetcher
+  >
 }
 
-export type Resource<
-  TResourceConfig extends ResourceConfig<TFetcher>,
+export type Endpoint<
+  TPath extends string,
+  TEndpointConfig extends EndpointConfig<TFetcher>,
   TFetcher extends Fetcher = Fetcher,
 > = {
-  [K in KeysOfThatDontExtend<TResourceConfig["actions"], undefined>]:
-    TResourceConfig["actions"][K] extends ActionConfig<TFetcher> ? Action<
-        PathParams<TResourceConfig["path"]>,
-        TResourceConfig["actions"][K],
-        TFetcher
-      >
-      : never
+  [
+    K in KeysOfThatDontExtend<
+      Pick<TEndpointConfig, Extract<keyof TEndpointConfig, Method>>,
+      undefined
+    >
+  ]: TEndpointConfig[K] extends ActionConfig<TFetcher> ? Action<
+      PathParams<TPath>,
+      TEndpointConfig[K],
+      TFetcher
+    >
+    : never
 }
 
 export type Action<
@@ -251,7 +261,7 @@ export type BodySource = "json" | "raw" | "URLSearchParameters" | "FormData"
 
 export type Schema<TInput, TOutput> = {
   parse(data: unknown): TOutput
-  transform?(input: TInput): TOutput
+  _transform?(input: TInput): TOutput
   _input: TInput
 }
 
@@ -320,11 +330,11 @@ export type PluginBeforeInit<TFetcher extends Fetcher = Fetcher> = {
 
 export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
   id: string
-  client: ClientConfig<ResourceRecord<TFetcher>, TFetcher>
-  resource: ResourceConfig<TFetcher>
+  client: ClientConfig<EndpointRecord<TFetcher>, TFetcher>
+  endpoint: EndpointConfig<TFetcher>
   action: ActionConfig<TFetcher>
   url: URL
-  method: keyof ActionsRecord<TFetcher>
+  method: Method
   init: FetcherInit<TFetcher>
   args?: PossibleActionArgs
 }

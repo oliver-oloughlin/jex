@@ -22,7 +22,7 @@ Deno.test("plugins - throttle", async (t) => {
         const promises: Promise<any>[] = []
 
         for (let i = 0; i < N; i++) {
-          promises.push(parallell.anything.get())
+          promises.push(parallell["/anything"].get())
         }
 
         await Promise.all(promises)
@@ -39,7 +39,7 @@ Deno.test("plugins - throttle", async (t) => {
         const before = performance.now()
 
         for (let i = 0; i < N; i++) {
-          await sequential.anything.get()
+          await sequential["/anything"].get()
         }
 
         const diff = performance.now() - before

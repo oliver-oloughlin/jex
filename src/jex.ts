@@ -1,56 +1,59 @@
 import { HttpError } from "./errors.ts"
 import type {
   ActionConfig,
-  ActionsRecord,
   BodyfullActionConfig,
   Client,
   ClientConfig,
+  EndpointConfig,
+  EndpointRecord,
   Fetcher,
+  Method,
   Plugin,
   PluginAfterContext,
   PluginBeforeContext,
   PluginBeforeInit,
   PossibleActionArgs,
-  ResourceConfig,
-  ResourceRecord,
   Result,
 } from "./types.ts"
 import { deepMerge } from "@std/collections"
 import { ulid } from "@std/ulid"
 
 export function jex<
-  const TResourceRecord extends ResourceRecord<TFetcher>,
+  const TEndpointRecord extends EndpointRecord<TFetcher>,
   const TFetcher extends Fetcher = Fetcher,
 >(
-  config: ClientConfig<TResourceRecord, TFetcher>,
+  config: ClientConfig<TEndpointRecord, TFetcher>,
 ) {
-  const resourceEntries = Object
-    .entries(config.resources)
+  const endpointEntries = Object
+    .entries(config.endpoints)
     .map((
-      [key, resourceConfig],
-    ) => [key, createResource(config, resourceConfig)])
+      [key, endpointConfig],
+    ) => [key, createEndpoint(key, config, endpointConfig)])
 
-  return Object.fromEntries(resourceEntries) as Client<
-    TResourceRecord,
+  return Object.fromEntries(endpointEntries) as Client<
+    TEndpointRecord,
     TFetcher
   >
 }
 
-function createResource(
+function createEndpoint(
+  path: string,
   clientConfig: ClientConfig<any, any>,
-  resourceConfig: ResourceConfig<any>,
+  endpointConfig: EndpointConfig<any>,
 ) {
   const actionEntries = Object
-    .entries(resourceConfig.actions)
+    .entries(endpointConfig)
+    .filter(([key]) => key !== "plugins")
     .map((
       [key, actionConfig],
     ) => [
       key,
       createAction(
+        path,
         clientConfig,
-        resourceConfig,
-        actionConfig,
-        key as keyof ActionsRecord<Fetcher>,
+        endpointConfig,
+        actionConfig as ActionConfig,
+        key as Method,
       ),
     ])
 
@@ -58,18 +61,20 @@ function createResource(
 }
 
 function createAction(
+  path: string,
   clientConfig: ClientConfig<any, Fetcher>,
-  resourceConfig: ResourceConfig<any>,
+  endpointConfig: EndpointConfig<any>,
   actionConfig: ActionConfig<any>,
-  method: keyof ActionsRecord<Fetcher>,
+  method: Method,
 ) {
   return async function (args?: PossibleActionArgs): Promise<Result<any>> {
     try {
-      const id = clientConfig.generateId?.() ?? ulid()
+      const id = clientConfig.idGenerator?.() ?? ulid()
 
       const { init, url } = await createInitAndUrl(
+        path,
         clientConfig,
-        resourceConfig,
+        endpointConfig,
         actionConfig,
         args,
         method,
@@ -78,7 +83,7 @@ function createAction(
 
       const res = await sendRequest(
         clientConfig,
-        resourceConfig,
+        endpointConfig,
         actionConfig,
         args,
         init,
@@ -118,13 +123,12 @@ function createAction(
 }
 
 function createUrl(
+  path: string,
   clientConfig: ClientConfig<any, Fetcher>,
-  resourceConfig: ResourceConfig<any>,
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
 ) {
   const baseUrl = clientConfig.baseUrl
-  const path = resourceConfig.path
   const query = args?.query
   const params = args?.params
 
@@ -152,7 +156,7 @@ function createUrl(
 
   if (actionConfig.query) {
     const parsed = (
-      actionConfig.query.transform?.(query ?? {}) ??
+      actionConfig.query._transform?.(query ?? {}) ??
         actionConfig.query.parse(query ?? {})
     ) as Record<string, any>
 
@@ -167,16 +171,17 @@ function createUrl(
 }
 
 async function createInitAndUrl(
+  path: string,
   clientConfig: ClientConfig<any, any>,
-  resourceConfig: ResourceConfig<any>,
+  endpointConfig: EndpointConfig<any>,
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
-  method: keyof ActionsRecord<Fetcher>,
+  method: Method,
   id: string,
 ) {
   const url = createUrl(
+    path,
     clientConfig,
-    resourceConfig,
     actionConfig,
     args,
   )
@@ -189,7 +194,7 @@ async function createInitAndUrl(
   let ctx: PluginBeforeContext<Fetcher> = {
     id,
     client: clientConfig,
-    resource: resourceConfig,
+    endpoint: endpointConfig,
     action: actionConfig,
     url,
     method,
@@ -205,7 +210,7 @@ async function createInitAndUrl(
     pluginInit = await applyBefore(pluginInit, ctx, plugin)
   }
 
-  for (const plugin of resourceConfig.plugins ?? []) {
+  for (const plugin of endpointConfig.plugins ?? []) {
     ctx = {
       ...ctx,
       init: pluginInit.init,
@@ -236,7 +241,7 @@ async function createInitAndUrl(
   })
 
   const parsedHeaders =
-    actionConfig?.headers?.transform?.(args?.headers ?? {}) ??
+    actionConfig?.headers?._transform?.(args?.headers ?? {}) ??
       actionConfig.headers?.parse(args?.headers ?? {}) ??
       {}
 
@@ -257,12 +262,12 @@ async function createInitAndUrl(
 
 async function sendRequest(
   clientConfig: ClientConfig<any, any>,
-  resourceConfig: ResourceConfig<any>,
+  endpointConfig: EndpointConfig<any>,
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
   init: RequestInit,
   url: URL,
-  method: keyof ActionsRecord<Fetcher>,
+  method: Method,
   id: string,
 ): Promise<Response> {
   const fetcher = clientConfig.fetcher ?? fetch
@@ -271,7 +276,7 @@ async function sendRequest(
   let ctx: PluginAfterContext<Fetcher> = {
     id,
     client: clientConfig,
-    resource: resourceConfig,
+    endpoint: endpointConfig,
     action: actionConfig,
     init,
     args,
@@ -293,7 +298,7 @@ async function sendRequest(
     res = await applyAfter(ctx, plugin)
   }
 
-  for (const plugin of resourceConfig.plugins ?? []) {
+  for (const plugin of endpointConfig.plugins ?? []) {
     ctx = {
       ...ctx,
       res,
@@ -352,7 +357,7 @@ function createBody(
 
   const bodySource = actionConfig.bodySource ?? "json"
 
-  const parsed = actionConfig.body.transform?.(args.body) ??
+  const parsed = actionConfig.body._transform?.(args.body) ??
     actionConfig.body.parse(args.body)
 
   switch (bodySource) {
@@ -415,5 +420,5 @@ async function parseData(
 
   const dataSource = actionConfig.dataSource ?? "json"
   const data = await res[dataSource]()
-  return actionConfig.data.transform?.(data) ?? actionConfig.data.parse(data)
+  return actionConfig.data._transform?.(data) ?? actionConfig.data.parse(data)
 }

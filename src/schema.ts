@@ -5,7 +5,7 @@ export function schema<const TOutput, const TInput = TOutput>(
 ): Schema<TInput, TOutput> {
   return {
     parse: (data) => data as TOutput,
-    transform,
+    _transform: transform,
     _input: null as TInput,
   }
 }
