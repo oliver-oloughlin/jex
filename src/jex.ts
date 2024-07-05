@@ -1,11 +1,11 @@
 import { HttpError } from "./errors.ts"
 import type {
   ActionConfig,
-  ActionsRecord,
   BodyfullActionConfig,
   Client,
   ClientConfig,
   Fetcher,
+  Method,
   Plugin,
   PluginAfterContext,
   PluginBeforeContext,
@@ -28,7 +28,7 @@ export function jex<
     .entries(config.resources)
     .map((
       [key, resourceConfig],
-    ) => [key, createResource(config, resourceConfig)])
+    ) => [key, createResource(key, config, resourceConfig)])
 
   return Object.fromEntries(resourceEntries) as Client<
     TResourceRecord,
@@ -37,20 +37,23 @@ export function jex<
 }
 
 function createResource(
+  path: string,
   clientConfig: ClientConfig<any, any>,
   resourceConfig: ResourceConfig<any>,
 ) {
   const actionEntries = Object
-    .entries(resourceConfig.actions)
+    .entries(resourceConfig)
+    .filter(([key]) => key !== "plugins")
     .map((
       [key, actionConfig],
     ) => [
       key,
       createAction(
+        path,
         clientConfig,
         resourceConfig,
-        actionConfig,
-        key as keyof ActionsRecord<Fetcher>,
+        actionConfig as ActionConfig,
+        key as Method,
       ),
     ])
 
@@ -58,16 +61,18 @@ function createResource(
 }
 
 function createAction(
+  path: string,
   clientConfig: ClientConfig<any, Fetcher>,
   resourceConfig: ResourceConfig<any>,
   actionConfig: ActionConfig<any>,
-  method: keyof ActionsRecord<Fetcher>,
+  method: Method,
 ) {
   return async function (args?: PossibleActionArgs): Promise<Result<any>> {
     try {
-      const id = clientConfig.generateId?.() ?? ulid()
+      const id = clientConfig.idGenerator?.() ?? ulid()
 
       const { init, url } = await createInitAndUrl(
+        path,
         clientConfig,
         resourceConfig,
         actionConfig,
@@ -118,13 +123,12 @@ function createAction(
 }
 
 function createUrl(
+  path: string,
   clientConfig: ClientConfig<any, Fetcher>,
-  resourceConfig: ResourceConfig<any>,
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
 ) {
   const baseUrl = clientConfig.baseUrl
-  const path = resourceConfig.path
   const query = args?.query
   const params = args?.params
 
@@ -167,16 +171,17 @@ function createUrl(
 }
 
 async function createInitAndUrl(
+  path: string,
   clientConfig: ClientConfig<any, any>,
   resourceConfig: ResourceConfig<any>,
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
-  method: keyof ActionsRecord<Fetcher>,
+  method: Method,
   id: string,
 ) {
   const url = createUrl(
+    path,
     clientConfig,
-    resourceConfig,
     actionConfig,
     args,
   )
@@ -262,7 +267,7 @@ async function sendRequest(
   args: PossibleActionArgs | undefined,
   init: RequestInit,
   url: URL,
-  method: keyof ActionsRecord<Fetcher>,
+  method: Method,
   id: string,
 ): Promise<Response> {
   const fetcher = clientConfig.fetcher ?? fetch

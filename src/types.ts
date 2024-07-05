@@ -49,34 +49,35 @@ export type ClientConfig<
   plugins?: Plugin<TFetcher>[]
 
   /**
-   * Generator function used to generate new request IDs.
+   * Generator function used to create new request IDs.
    *
    * Uses `ulid()` by default.
    *
    * @default ulid()
    */
-  generateId?: () => string
+  idGenerator?: () => string
 }
 
 export type ResourceRecord<TFetcher extends Fetcher = Fetcher> = {
   [K in string]: ResourceConfig<TFetcher>
 }
 
-export type ResourceConfig<TFetcher extends Fetcher = Fetcher> = {
-  path: string
-  actions: ActionsRecord<TFetcher>
-  plugins?: Plugin<TFetcher>[]
-}
+export type BodylessMethod = "get" | "head"
 
-export type ActionsRecord<TFetcher extends Fetcher = Fetcher> = {
-  get?: BodylessActionConfig<TFetcher>
-  head?: BodylessActionConfig<TFetcher>
-  post?: BodyfullActionConfig<TFetcher>
-  delete?: BodyfullActionConfig<TFetcher>
-  patch?: BodyfullActionConfig<TFetcher>
-  put?: BodyfullActionConfig<TFetcher>
-  options?: BodyfullActionConfig<TFetcher>
-}
+export type BodyfullMethod = "post" | "delete" | "patch" | "put" | "options"
+
+export type Method = BodylessMethod | BodyfullMethod
+
+export type ResourceConfig<TFetcher extends Fetcher = Fetcher> =
+  & {
+    [K in BodylessMethod]?: BodylessActionConfig
+  }
+  & {
+    [K in BodyfullMethod]?: BodyfullActionConfig
+  }
+  & {
+    plugins?: Plugin<TFetcher>[]
+  }
 
 export type BodylessActionConfig<TFetcher extends Fetcher = Fetcher> = {
   data?: Schema<any, any>
@@ -107,17 +108,22 @@ export type Client<
   TResourceConfigs extends ResourceRecord<TFetcher>,
   TFetcher extends Fetcher = Fetcher,
 > = {
-  [K in keyof TResourceConfigs]: Resource<TResourceConfigs[K], TFetcher>
+  [K in Extract<keyof TResourceConfigs, string>]: Resource<
+    K,
+    TResourceConfigs[K],
+    TFetcher
+  >
 }
 
 export type Resource<
+  TPath extends string,
   TResourceConfig extends ResourceConfig<TFetcher>,
   TFetcher extends Fetcher = Fetcher,
 > = {
-  [K in KeysOfThatDontExtend<TResourceConfig["actions"], undefined>]:
-    TResourceConfig["actions"][K] extends ActionConfig<TFetcher> ? Action<
-        PathParams<TResourceConfig["path"]>,
-        TResourceConfig["actions"][K],
+  [K in KeysOfThatDontExtend<Omit<TResourceConfig, "plugins">, undefined>]:
+    TResourceConfig[K] extends ActionConfig<TFetcher> ? Action<
+        PathParams<TPath>,
+        TResourceConfig[K],
         TFetcher
       >
       : never
@@ -324,7 +330,7 @@ export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
   resource: ResourceConfig<TFetcher>
   action: ActionConfig<TFetcher>
   url: URL
-  method: keyof ActionsRecord<TFetcher>
+  method: Method
   init: FetcherInit<TFetcher>
   args?: PossibleActionArgs
 }
