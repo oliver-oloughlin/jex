@@ -152,7 +152,7 @@ function createUrl(
 
   if (actionConfig.query) {
     const parsed = (
-      actionConfig.query.transform?.(query ?? {}) ??
+      actionConfig.query._transform?.(query ?? {}) ??
         actionConfig.query.parse(query ?? {})
     ) as Record<string, any>
 
@@ -236,7 +236,7 @@ async function createInitAndUrl(
   })
 
   const parsedHeaders =
-    actionConfig?.headers?.transform?.(args?.headers ?? {}) ??
+    actionConfig?.headers?._transform?.(args?.headers ?? {}) ??
       actionConfig.headers?.parse(args?.headers ?? {}) ??
       {}
 
@@ -352,7 +352,7 @@ function createBody(
 
   const bodySource = actionConfig.bodySource ?? "json"
 
-  const parsed = actionConfig.body.transform?.(args.body) ??
+  const parsed = actionConfig.body._transform?.(args.body) ??
     actionConfig.body.parse(args.body)
 
   switch (bodySource) {
@@ -415,5 +415,5 @@ async function parseData(
 
   const dataSource = actionConfig.dataSource ?? "json"
   const data = await res[dataSource]()
-  return actionConfig.data.transform?.(data) ?? actionConfig.data.parse(data)
+  return actionConfig.data._transform?.(data) ?? actionConfig.data.parse(data)
 }

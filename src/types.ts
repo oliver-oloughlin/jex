@@ -251,7 +251,7 @@ export type BodySource = "json" | "raw" | "URLSearchParameters" | "FormData"
 
 export type Schema<TInput, TOutput> = {
   parse(data: unknown): TOutput
-  transform?(input: TInput): TOutput
+  _transform?(input: TInput): TOutput
   _input: TInput
 }
 
