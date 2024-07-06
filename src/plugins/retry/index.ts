@@ -23,4 +23,4 @@
  * ```
  */
 
-export { retryList } from "./progressive_retry.ts"
+export { retryList } from "./retry_list.ts"

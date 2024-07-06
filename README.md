@@ -87,10 +87,10 @@ const client = jex({
 
 const result = await client["/foo/:bar"].post({
   params: {
-    bar: "bar",
+    bar: "Hello",
   },
   query: {
-    q: "HelloWorld",
+    q: "World",
   },
   body: {
     baz: true,
@@ -133,6 +133,123 @@ if (result.ok) {
   // Inferred as null
   const data = result.data
 }
+```
+
+### Plugins
+
+`jex` also provides a handful of built-in plugins to provide easy logging,
+authentication and more. Plugins can be applied for all endpoints, all actions
+of a specific endpoint, or for a specific action of a specific endpoint.
+
+```ts
+import { jex } from "@olli/jex"
+import { example } from "@olli/jex/example"
+
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  // Applied for all endpoints and actions
+  plugins: [example()],
+  endpoints: {
+    "/foo": {
+      // Applied for all actions of this endpoint
+      plugins: [example()],
+      get: {
+        // Applied for this action only
+        plugins: [example()],
+      },
+    },
+  },
+})
+```
+
+#### Logger
+
+Provides basic logging of outgoing requests and incoming responses.
+
+```ts
+import { jex } from "@olli/jex"
+import { logger } from "@olli/jex/logger"
+
+// With default log function
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  plugins: [logger()],
+  endpoints: {},
+})
+
+// With specified log function
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  plugins: [logger(console.info)],
+  endpoints: {},
+})
+```
+
+#### Basic Auth
+
+Provides basic authentication using the `Authorization` header.
+
+```ts
+import { jex } from "@olli/jex"
+import { basicAuth } from "@olli/jex/auth"
+
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  plugins: [basicAuth({
+    username: "olli",
+    password: "secret123",
+  })],
+  endpoints: {},
+})
+```
+
+#### Basic Auth
+
+Provides bearer (token) authentication.
+
+```ts
+import { jex } from "@olli/jex"
+import { bearerAuth } from "@olli/jex/auth"
+
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  plugins: [bearerAuth("super_secret_token")],
+  endpoints: {},
+})
+```
+
+#### Retry List
+
+Retries failed requests in a progressive manner, following the provided list of
+retry delays, specified in milliseconds.
+
+```ts
+import { jex } from "@olli/jex"
+import { retryList } from "@olli/jex/retry"
+
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  // First waits 500ms, then 1000ms, and then 3000ms between retries.
+  // Returns failed response if last attempt fails
+  plugins: [retryList([500, 1000, 3000])],
+  endpoints: {},
+})
+```
+
+#### Fixed Throttle
+
+Throttles requests based on a fixed interval, specified in milliseconds.
+
+```ts
+import { jex } from "@olli/jex"
+import { fixedThrottle } from "@olli/jex/throttle"
+
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  // Ensures a minimum delay of 1 second between requests
+  plugins: [fixedThrottle(1000)],
+  endpoints: {},
+})
 ```
 
 ## Development
