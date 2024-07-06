@@ -5,7 +5,7 @@
  *
  * ## Retry List
  *
- * Wait and retry based on specified retry list.
+ * Wait and retry requests based on specified retry list.
  *
  * @example
  * ```ts
@@ -23,4 +23,4 @@
  * ```
  */
 
-export { retryList } from "./progressive_retry.ts"
+export { retryList } from "./retry_list.ts"

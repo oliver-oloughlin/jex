@@ -32,7 +32,7 @@
  *
  * const client = jex({
  *   baseUrl: "https://domain.com/api",
- *   plugins: [bearerAuth("token")],
+ *   plugins: [bearerAuth("super_secret_token")],
  *   endpoints: {
  *     // ...
  *   },

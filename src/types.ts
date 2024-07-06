@@ -6,6 +6,7 @@
 
 import type { HttpStatusCode } from "./http_status_code.ts"
 
+/** API client configuration. */
 export type ClientConfig<
   TEndpointRecord extends EndpointRecord<TFetcher>,
   TFetcher extends Fetcher,
@@ -42,16 +43,19 @@ export type ClientConfig<
   idGenerator?: () => string
 }
 
+/** Record of endpoints configurations. */
 export type EndpointRecord<TFetcher extends Fetcher = Fetcher> = {
   [K in string]: EndpointConfig<TFetcher>
 }
 
-export type BodylessMethod = "get" | "head"
+type BodylessMethod = "get" | "head"
 
-export type BodyfullMethod = "post" | "delete" | "patch" | "put" | "options"
+type BodyfullMethod = "post" | "delete" | "patch" | "put" | "options"
 
+/** HTTP method. */
 export type Method = BodylessMethod | BodyfullMethod
 
+/** API endpoint configuration. */
 export type EndpointConfig<TFetcher extends Fetcher = Fetcher> =
   & {
     [K in BodylessMethod]?: BodylessActionConfig
@@ -63,21 +67,64 @@ export type EndpointConfig<TFetcher extends Fetcher = Fetcher> =
     plugins?: Plugin<TFetcher>[]
   }
 
+/** API action configuration without body.  */
 export type BodylessActionConfig<TFetcher extends Fetcher = Fetcher> = {
+  /**
+   * Schema for data that is returned by this action.
+   *
+   * If no data schema is specified, the action will return null for the data field.
+   */
   data?: Schema<any, any>
+
+  /**
+   * Source from which to extract data from the response.
+   *
+   * Is `json` by default.
+   *
+   * @default "json"
+   */
   dataSource?: "json" | "text" | "blob" | "arrayBuffer" | "bytes" | "formData"
+
+  /**
+   * Schema for the query that this action takes as argument.
+   *
+   * If no query schema is specified, the action will not expect a query argument.
+   */
   query?: Schema<any, any>
+
+  /** List of plugins that will be applied for this action */
   plugins?: Plugin<TFetcher>[]
+
+  /**
+   * Schema for the headers that this action takes as argument.
+   *
+   * If no headers schema is specified, the action will not expect a headers argument.
+   */
   headers?: Schema<any, any>
 }
 
+/** API action configuration with body.  */
 export type BodyfullActionConfig<TFetcher extends Fetcher = Fetcher> =
   & BodylessActionConfig<TFetcher>
   & {
+    /**
+     * Schema for the body that this action takes as argument.
+     *
+     * If no body schema is specified, the action will not expect a body argument.
+     */
     body?: Schema<any, any>
+
+    /**
+     * Source in which the body will be sent.
+     *
+     * Is `json` by default.
+     *
+     * @default "json"
+     */
     bodySource?: "json" | "raw" | "URLSearchParameters" | "FormData"
   }
 
+/** API action configuration.  */
 export type ActionConfig<TFetcher extends Fetcher = Fetcher> =
   | BodylessActionConfig<TFetcher>
   | BodyfullActionConfig<TFetcher>
@@ -88,6 +135,7 @@ export type ActionConfig<TFetcher extends Fetcher = Fetcher> =
 /*                  */
 /********************/
 
+/** API client, containing configured endpoints. */
 export type Client<
   TEndpointRecord extends EndpointRecord<TFetcher>,
   TFetcher extends Fetcher = Fetcher,
@@ -99,6 +147,7 @@ export type Client<
   >
 }
 
+/** API endpoint, containing configured actions. */
 export type Endpoint<
   TPath extends string,
   TEndpointConfig extends EndpointConfig<TFetcher>,
@@ -117,6 +166,7 @@ export type Endpoint<
     : never
 }
 
+/** API action, taking arguments based on configuration. */
 export type Action<
   TPathParams extends PathParams<any>,
   TActionConfig extends ActionConfig<TFetcher>,
@@ -127,7 +177,7 @@ export type Action<
   ) => Promise<
     Result<
       TActionConfig["data"] extends Schema<any, any>
-        ? TypeOf<TActionConfig["data"]>
+        ? Output<TActionConfig["data"]>
         : null
     >
   >
@@ -136,15 +186,25 @@ export type Action<
   ) => Promise<
     Result<
       TActionConfig["data"] extends Schema<any, any>
-        ? TypeOf<TActionConfig["data"]>
+        ? Output<TActionConfig["data"]>
         : null
     >
   >
 
+/**
+ * API action result.
+ *
+ * Contains the expected data if successful, or an error if not.
+ */
 export type Result<T> =
   & {
+    /** The raw response object returned by the fetch call. */
     raw?: Response
+
+    /** HTTP status text. */
     statusText?: string
+
+    /** HTTP status code. */
     status?: HttpStatusCode
   }
   & ({
@@ -173,7 +233,7 @@ export type ActionArgs<
     : EmptyObject)
   & { init?: StrippedRequestInit<FetcherInit<TFetcher>> }
 
-export type ParseArg<
+type ParseArg<
   T,
   K extends keyof T,
 > = T[K] extends Schema<any, any> ? (
@@ -193,8 +253,9 @@ export type ParseArg<
 /*********************/
 
 const __EMPTY_OBJECT__ = {}
-export type EmptyObject = typeof __EMPTY_OBJECT__
+type EmptyObject = typeof __EMPTY_OBJECT__
 
+/** The possible arguments that an API action might expect. */
 export type PossibleActionArgs = {
   query?: Record<string, string>
   body?: Record<string, string>
@@ -203,36 +264,33 @@ export type PossibleActionArgs = {
   init?: RequestInit
 }
 
-export type WithOptionalProperty<T> = IsOptionalObject<T[keyof T]> extends true
+type WithOptionalProperty<T> = IsOptionalObject<T[keyof T]> extends true
   ? { [Key in keyof T]?: T[Key] }
   : { [Key in keyof T]: T[Key] }
 
-export type IsOptionalObject<T> = IsEmptyObject<RequiredProperties<T>>
+type IsOptionalObject<T> = IsEmptyObject<RequiredProperties<T>>
 
-export type RequiredProperties<T> = {
+type RequiredProperties<T> = {
   [K in KeysOfThatNeverExtend<T, undefined>]: T[K]
 }
 
-export type IsEmptyObject<T> = [keyof T] extends [never] ? true : false
+type IsEmptyObject<T> = [keyof T] extends [never] ? true : false
 
-export type KeysOfThatExtend<T1, T2> = keyof {
-  [K in keyof T1 as T1[K] extends T2 ? K : never]: unknown
-}
-
-export type KeysOfThatDontExtend<T1, T2> = keyof {
+type KeysOfThatDontExtend<T1, T2> = keyof {
   [K in keyof T1 as T1[K] extends T2 ? never : K]: unknown
 }
 
-export type KeysOfThatNeverExtend<T1, T2> = keyof {
+type KeysOfThatNeverExtend<T1, T2> = keyof {
   [
     K in keyof T1 as HasMembersExtending<T1[K], T2> extends true ? never
       : K
   ]: unknown
 }
 
-export type HasMembersExtending<T1, T2> = Extract<T1, T2> extends never ? false
+type HasMembersExtending<T1, T2> = Extract<T1, T2> extends never ? false
   : true
 
+/** Source of response data. */
 export type DataSource =
   | "json"
   | "text"
@@ -241,37 +299,58 @@ export type DataSource =
   | "bytes"
   | "formData"
 
+/** Source of request body. */
 export type BodySource = "json" | "raw" | "URLSearchParameters" | "FormData"
 
+/** Data schema. */
 export type Schema<TInput, TOutput> = {
+  /**
+   * Parse function that takes data as argument and returns the parsed output.
+   *
+   * Can throw an error if parse fails.
+   */
   parse(data: unknown): TOutput
+
+  /** Transform function that takes input as argument and returns the output type. */
   _transform?(input: TInput): TOutput
+
+  /** Used to infer the input type. */
   _input: TInput
 }
 
-export type TypeOf<TSchema extends Schema<any, any>> = ReturnType<
+type Output<TSchema extends Schema<any, any>> = ReturnType<
   TSchema["parse"]
 >
 
-export type Input<TSchema extends Schema<any, any>> = TSchema["_input"]
+type Input<TSchema extends Schema<any, any>> = TSchema["_input"]
 
+/**
+ * Fetcher function that sends a request and returns a response.
+ *
+ * @param url - Relative or absolute URL of HTTP endpoint.
+ * @param init - Request options.
+ */
 export type Fetcher = (
   url: string | URL,
   init?: RequestInit,
 ) => Promise<Response>
 
+/** Available request options for fetcher function. */
 export type FetcherInit<TFetcher extends Fetcher = Fetcher> = Exclude<
   Parameters<TFetcher>["1"],
   undefined
 >
 
+/**
+ * A plugin object that can be provided to either a client, endpoint, or action.
+ */
 export type Plugin<TFetcher extends Fetcher = Fetcher> = {
   /**
    * Runs before a request is sent.
    *
    * Can return either void or a PluginBeforeInit object.
    *
-   * @param ctx - Pre-request context.
+   * @param ctx - Context object from before a request is sent.
    */
   before?(
     ctx: PluginBeforeContext<TFetcher>,
@@ -286,7 +365,7 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
    *
    * Can return either void or a response object.
    *
-   * @param ctx - Post-request context.
+   * @param ctx - Context object from after a response is received.
    */
   after?(
     ctx: PluginAfterContext<TFetcher>,
@@ -297,11 +376,13 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
     | Promise<void>
 }
 
+/** Options that can be applied before a request is sent */
 export type PluginBeforeInit<TFetcher extends Fetcher = Fetcher> = {
   init?: FetcherInit<TFetcher>
   query?: Record<string, string>
 }
 
+/** Context object from before a request is sent. */
 export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
   id: string
   client: ClientConfig<EndpointRecord<TFetcher>, TFetcher>
@@ -313,6 +394,7 @@ export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
   args?: PossibleActionArgs
 }
 
+/** Context object from after a response is received. */
 export type PluginAfterContext<TFetcher extends Fetcher = Fetcher> =
   & PluginBeforeContext<TFetcher>
   & {
@@ -322,17 +404,19 @@ export type PluginAfterContext<TFetcher extends Fetcher = Fetcher> =
     ): Promise<Response>
   }
 
+/** Path parameters extracted from given path. */
 export type PathParams<TPath extends string> = TPath extends
   `${infer A}/${infer B}` ? ParsePathParam<A> | PathParams<B>
   : ParsePathParam<TPath>
 
-export type ParsePathParam<TPathPart extends string> = TPathPart extends
+type ParsePathParam<TPathPart extends string> = TPathPart extends
   `<${infer Param}>` ? Param
   : TPathPart extends `[${infer Param}]` ? Param
   : TPathPart extends `{${infer Param}}` ? Param
   : TPathPart extends `:${infer Param}` ? Param
   : never
 
+/** Request options without method and body. */
 export type StrippedRequestInit<TInit extends RequestInit> = Omit<
   TInit,
   "method" | "body"

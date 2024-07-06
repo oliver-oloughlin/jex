@@ -1,12 +1,36 @@
 import type { Plugin, PluginBeforeInit } from "../../types.ts"
 import { encodeBase64 } from "@std/encoding/base64"
 
+/** Basic authentication options. */
 export type BasicAuthOptions = {
+  /** Username as plaintext. */
   username: string
+
+  /** Password as plaintext. */
   password: string
 }
 
-export function basicAuth(options: BasicAuthOptions): BasicAuth {
+/**
+ * Basic authentication plugin.
+ *
+ * @param options - Basic authentication options.
+ * @returns A plugin object.
+ *
+ * @example
+ * ```ts
+ * import { jex } from "@olli/jex"
+ * import { basicAuth } from "@olli/jex/auth"
+ *
+ * const client = jex({
+ *   baseUrl: "https://domain.com/api",
+ *   plugins: [basicAuth({ username: "user", password: "pass" })],
+ *   endpoints: {
+ *     // ...
+ *   },
+ * })
+ * ```
+ */
+export function basicAuth(options: BasicAuthOptions): Plugin {
   return new BasicAuth(options)
 }
 
