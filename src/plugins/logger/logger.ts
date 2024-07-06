@@ -1,13 +1,56 @@
+import type { HttpStatusCode } from "../../http_status_code.ts"
 import type {
   Fetcher,
+  Method,
   Plugin,
   PluginAfterContext,
   PluginBeforeContext,
 } from "../../types.ts"
-import { brightWhite, green, red, yellow } from "@std/fmt/colors"
+import { brightWhite, green, red, rgb24, yellow } from "@std/fmt/colors"
+
+const SUCCESS_LIGHT_RGB = { r: 175, g: 215, b: 190 }
+const WARNING_LIGHT_RGB = { r: 205, g: 205, b: 170 }
+const ERROR_LIGHT_RGB = { r: 220, g: 180, b: 180 }
 
 /** Logger function, prints the provided arguments. */
 export type LogFn = (...data: unknown[]) => void
+
+/** Options for logger. */
+export type LoggerOptions = {
+  /**
+   * Logger function, prints the provided arguments.
+   *
+   * @default console.info()
+   */
+  fn?: LogFn
+
+  /**
+   * Whether to include the query or not when printing the URL.
+   *
+   * `true` by default.
+   *
+   * @default true
+   */
+  query?: boolean
+
+  /**
+   * Whether to include the origin when printing the URL.
+   *
+   * `true` by default.
+   *
+   * @default true
+   */
+  origin?: boolean
+
+  /**
+   * Whether to include the status text or not when printing responses.
+   *
+   * `false` by default.
+   *
+   * @default false
+   */
+  statusText?: boolean
+}
 
 /**
  * Logger plugin.
@@ -46,43 +89,86 @@ export type LogFn = (...data: unknown[]) => void
  * })
  * ```
  */
-export function logger(fn?: LogFn): Plugin {
-  return new Logger(fn)
+export function logger(options?: LoggerOptions): Plugin {
+  return new Logger(options)
 }
 
 class Logger implements Plugin {
   private fn: LogFn
+  private query: boolean
+  private origin: boolean
+  private statusText: boolean
   private reqTimestampMap: Map<string, number>
 
-  constructor(fn?: LogFn) {
+  constructor(options?: LoggerOptions) {
     // deno-lint-ignore no-console
-    this.fn = fn ?? console.info
+    this.fn = options?.fn ?? console.info
+    this.query = options?.query ?? true
+    this.origin = options?.origin ?? true
+    this.statusText = options?.statusText ?? false
     this.reqTimestampMap = new Map()
   }
 
   before(ctx: PluginBeforeContext<Fetcher>) {
     this.reqTimestampMap.set(ctx.id, Date.now())
-    const text = `--> ${ctx.method.toUpperCase()} ${ctx.url.toString()}`
+    const url = this.urlToString(ctx.url)
+    const method = this.methodToString(ctx.method)
+    const text = `--> ${method} ${url}`
     this.fn(text)
   }
 
   after(ctx: PluginAfterContext<Fetcher>) {
-    const timestamp = this.reqTimestampMap.get(ctx.id)
-    this.reqTimestampMap.delete(ctx.id)
-    const deltaMs = Date.now() - (timestamp ?? Number.MAX_VALUE)
-    const deltaMsStr = deltaMs < 0 ? "" : ` ${deltaMs}ms `
-    const deltaMsFmt = brightWhite(deltaMsStr)
+    const ms = this.deltaMsToString(ctx.id)
+    const url = this.urlToString(ctx.url)
+    const status = this.statusToString(ctx.res.status, ctx.res.statusText)
+    const method = this.methodToString(ctx.method)
+    const text = `<-- ${method} ${status} ${ms} ${url}`
+    this.fn(text)
+  }
 
-    const statusStr = ctx.res.status.toString()
-    const statusFmt = statusStr.startsWith("2")
-      ? green(statusStr)
+  private urlToString(url: URL) {
+    let urlStr = ""
+    if (this.origin) urlStr += url.origin
+    urlStr += url.pathname
+    if (this.query) urlStr += url.search
+    return urlStr
+  }
+
+  private methodToString(method: Method) {
+    return method.toUpperCase()
+  }
+
+  private statusToString(status: HttpStatusCode, statusText: string) {
+    const statusStr = status.toString()
+
+    const type = statusStr.startsWith("2")
+      ? "success"
       : statusStr.startsWith("4")
+      ? "error"
+      : "warning"
+
+    const statusFmt = type === "success"
+      ? green(statusStr)
+      : type === "error"
       ? red(statusStr)
       : yellow(statusStr)
 
-    const text =
-      `<-- ${ctx.method.toUpperCase()} ${statusFmt}${deltaMsFmt}${ctx.url.toString()}`
+    const rgb = type === "success"
+      ? SUCCESS_LIGHT_RGB
+      : type === "error"
+      ? ERROR_LIGHT_RGB
+      : WARNING_LIGHT_RGB
 
-    this.fn(text)
+    const statusTextStr = this.statusText ? ` ${statusText}` : ""
+    const statusTextFmt = rgb24(statusTextStr, rgb)
+
+    return `${statusFmt}${statusTextFmt}`
+  }
+
+  private deltaMsToString(reqId: string) {
+    const timestamp = this.reqTimestampMap.get(reqId)
+    this.reqTimestampMap.delete(reqId)
+    const deltaMs = Math.max(0, Date.now() - (timestamp ?? Number.MAX_VALUE))
+    return brightWhite(`${deltaMs}ms`)
   }
 }

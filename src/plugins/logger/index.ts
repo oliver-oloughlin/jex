@@ -27,7 +27,7 @@
  * const client = jex({
  *   baseUrl: "https://domain.com/api",
  *   // Use a specific logger function
- *   plugins: [logger(console.info)],
+ *   plugins: [logger({ fn: console.info })],
  *   endpoints: {
  *     // ...
  *   },
