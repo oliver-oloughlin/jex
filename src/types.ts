@@ -21,22 +21,6 @@ export type ClientConfig<
   endpoints: TEndpointRecord
 
   /**
-   * Logger used for logging outgoing and incoming requests.
-   *
-   * Is also passed to plugins.
-   */
-  logger?: Logger
-
-  /**
-   * Whether to disable the default logging or not.
-   *
-   * Is `false` by default.
-   *
-   * @default false
-   */
-  disableDefaultLogging?: boolean
-
-  /**
    * Fetcher function used to send HTTP requests.
    *
    * Uses global `fetch()` function by default.
@@ -270,16 +254,6 @@ export type TypeOf<TSchema extends Schema<any, any>> = ReturnType<
 >
 
 export type Input<TSchema extends Schema<any, any>> = TSchema["_input"]
-
-export type LogFn = (...data: unknown[]) => void
-
-export type Logger = {
-  info: LogFn
-  warn: LogFn
-  trace: LogFn
-  debug: LogFn
-  error: LogFn
-}
 
 export type Fetcher = (
   url: string | URL,
