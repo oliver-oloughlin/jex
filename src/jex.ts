@@ -11,7 +11,6 @@ import type {
   Plugin,
   PluginAfterContext,
   PluginBeforeContext,
-  PluginBeforeInit,
   PossibleActionArgs,
   Result,
 } from "./types.ts"
@@ -186,10 +185,7 @@ async function createInitAndUrl(
     args,
   )
 
-  let pluginInit: Required<PluginBeforeInit> = {
-    init: {},
-    query: {},
-  }
+  let init: RequestInit = {}
 
   let ctx: PluginBeforeContext<Fetcher> = {
     id,
@@ -198,37 +194,36 @@ async function createInitAndUrl(
     action: actionConfig,
     url,
     method,
-    init: pluginInit.init,
+    init,
     args,
   }
 
   for (const plugin of clientConfig.plugins ?? []) {
     ctx = {
       ...ctx,
-      init: pluginInit.init,
+      init,
     }
-    pluginInit = await applyBefore(pluginInit, ctx, plugin)
+    init = await applyBefore(init, ctx, plugin)
   }
 
   for (const plugin of endpointConfig.plugins ?? []) {
     ctx = {
       ...ctx,
-      init: pluginInit.init,
+      init,
     }
-    pluginInit = await applyBefore(pluginInit, ctx, plugin)
+    init = await applyBefore(init, ctx, plugin)
   }
 
   for (const plugin of actionConfig.plugins ?? []) {
     ctx = {
       ...ctx,
-      init: pluginInit.init,
+      init,
     }
-    pluginInit = await applyBefore(pluginInit, ctx, plugin)
+    init = await applyBefore(init, ctx, plugin)
   }
 
   const bodyData = createBody(actionConfig, args)
 
-  let init = pluginInit.init
   init = deepMerge(init as object, {
     body: bodyData.body,
     ...(bodyData.contentType
@@ -249,10 +244,6 @@ async function createInitAndUrl(
   init = deepMerge(init as object, args?.init ?? {} as object)
   init = deepMerge(init as object, { headers: stringifiedHeaders })
   init = deepMerge(init as object, { method })
-
-  Object.entries(pluginInit.query).forEach(([key, val]) => {
-    url.searchParams.append(key, val.toString())
-  })
 
   return {
     init,
@@ -318,14 +309,22 @@ async function sendRequest(
 }
 
 async function applyBefore(
-  init: Required<PluginBeforeInit>,
+  init: RequestInit,
   ctx: PluginBeforeContext<Fetcher>,
   plugin: Plugin<Fetcher>,
-): Promise<Required<PluginBeforeInit>> {
+): Promise<RequestInit> {
   if (!plugin.before) return init
+
   const result = await plugin.before(ctx)
-  if (result) return deepMerge(init as object, result)
-  return init
+  if (!result) return init
+
+  if (result.query) {
+    Object.entries(result.query).forEach(([key, val]) => {
+      ctx.url.searchParams.append(key, val.toString())
+    })
+  }
+
+  return result.init ?? init
 }
 
 async function applyAfter(
