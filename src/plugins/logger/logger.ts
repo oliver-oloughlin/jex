@@ -6,8 +6,46 @@ import type {
 } from "../../types.ts"
 import { brightWhite, green, red, yellow } from "@std/fmt/colors"
 
+/** Logger function, prints the provided arguments. */
 export type LogFn = (...data: unknown[]) => void
 
+/**
+ * Logger plugin.
+ *
+ * Logs outgoing requests and incoming responses.
+ *
+ * @param fn - Optional logger function.
+ * @returns - A plugin object.
+ *
+ * @example
+ * ```ts
+ * import { jex } from "@olli/jex"
+ * import { logger } from "@olli/jex/logger"
+ *
+ * const client = jex({
+ *   baseUrl: "https://domain.com/api",
+ *   plugins: [logger()],
+ *   endpoints: {
+ *     // ...
+ *   },
+ * })
+ * ```
+ *
+ * @example
+ * ```ts
+ * import { jex } from "@olli/jex"
+ * import { logger } from "@olli/jex/logger"
+ *
+ * const client = jex({
+ *   baseUrl: "https://domain.com/api",
+ *   // Use a specific logger function
+ *   plugins: [logger(console.info)],
+ *   endpoints: {
+ *     // ...
+ *   },
+ * })
+ * ```
+ */
 export function logger(fn?: LogFn): Plugin {
   return new Logger(fn)
 }

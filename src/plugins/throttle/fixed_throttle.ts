@@ -1,21 +1,38 @@
 import type { Plugin } from "../../types.ts"
 import { sleep } from "../../utils.ts"
 
-export function fixedThrottle(interval: number): FixedThrottle {
+/**
+ * Fixed throttle plugin.
+ *
+ * Throttle requests based on a fixed interval.
+ *
+ * @param interval - Throttle interval in milliseconds.
+ * @returns - A plugin object.
+ *
+ * @example
+ * ```ts
+ * import { jex } from "@olli/jex"
+ * import { fixedThrottle } from "@olli/jex/throttle"
+ *
+ * const client = jex({
+ *   baseUrl: "https://domain.com/api",
+ *   // Send requests with a minimum of 500ms interval between them
+ *   plugins: [fixedThrottle(500)],
+ *   endpoints: {
+ *     // ...
+ *   },
+ * })
+ * ```
+ */
+export function fixedThrottle(interval: number): Plugin {
   return new FixedThrottle(interval)
 }
 
-/**
- * A fixed minimum delay between requests.
- */
 class FixedThrottle implements Plugin {
   private interval: number
   private previousTimestamp: number
   private waiting: number
 
-  /**
-   * @param interval - Fixed interval in milliseconds, guarantees a minimum delay between requests.
-   */
   constructor(interval: number) {
     this.interval = interval
     this.previousTimestamp = Date.now() - interval

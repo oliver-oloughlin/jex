@@ -3,7 +3,7 @@
  *
  * Built-in logger plugin.
  *
- * Logs outgoing and incoming requests.
+ * Logs outgoing requests and incoming responses.
  *
  * @example
  * ```ts

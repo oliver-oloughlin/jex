@@ -1,6 +1,26 @@
 import type { Plugin, PluginBeforeInit } from "../../types.ts"
 
-export function bearerAuth(token: string): BearerAuth {
+/**
+ * Bearer (token) authentication plugin.
+ *
+ * @param token - Bearer token.
+ * @returns - A plugin object.
+ *
+ * @example
+ * ```ts
+ * import { jex } from "@olli/jex"
+ * import { bearerAuth } from "@olli/jex/auth"
+ *
+ * const client = jex({
+ *   baseUrl: "https://domain.com/api",
+ *   plugins: [bearerAuth("super_secret_token")],
+ *   endpoints: {
+ *     // ...
+ *   },
+ * })
+ * ```
+ */
+export function bearerAuth(token: string): Plugin {
   return new BearerAuth(token)
 }
 

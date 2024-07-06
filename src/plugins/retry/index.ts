@@ -5,7 +5,7 @@
  *
  * ## Retry List
  *
- * Wait and retry based on specified retry list.
+ * Wait and retry requests based on specified retry list.
  *
  * @example
  * ```ts

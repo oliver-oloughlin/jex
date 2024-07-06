@@ -2,7 +2,30 @@ import { RETRYABLE_HTTP_STATUS_CODES } from "../../http_status_code.ts"
 import type { Fetcher, Plugin, PluginAfterContext } from "../../types.ts"
 import { sleep } from "../../utils.ts"
 
-export function retryList(retries: number[]): RetryList {
+/**
+ * Retry list plugin.
+ *
+ * Wait and retry requests based on specified retry list.
+ *
+ * @param retries - List of retries and specified delays.
+ * @returns - A plugin object.
+ *
+ * @example
+ * ```ts
+ * import { jex } from "@olli/jex"
+ * import { retryList } from "@olli/jex/retry"
+ *
+ * const client = jex({
+ *   baseUrl: "https://domain.com/api",
+ *   // Retry up to 3 times, waiting 500ms, then 1000ms and then 3000ms
+ *   plugins: [retryList([500, 1000, 3000])],
+ *   endpoints: {
+ *     // ...
+ *   },
+ * })
+ * ```
+ */
+export function retryList(retries: number[]): Plugin {
   return new RetryList(retries)
 }
 
