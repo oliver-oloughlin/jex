@@ -153,14 +153,13 @@ function createUrl(
 
   const url = new URL(urlPath)
 
-  if (actionConfig.query) {
-    const parsed = (
-      actionConfig.query._transform?.(query ?? {}) ??
-        actionConfig.query.parse(query ?? {})
-    ) as Record<string, any>
+  if (query || actionConfig.query) {
+    const parsed = actionConfig.query?._transform?.(query ?? {}) ??
+      actionConfig.query?.parse(query ?? {}) ??
+      query
 
     Object
-      .entries(parsed)
+      .entries(parsed as Record<string, any>)
       .forEach(([name, value]) => {
         url.searchParams.append(name, value.toString())
       })
@@ -236,9 +235,9 @@ async function createInitAndUrl(
   })
 
   const parsedHeaders =
-    actionConfig?.headers?._transform?.(args?.headers ?? {}) ??
+    actionConfig.headers?._transform?.(args?.headers ?? {}) ??
       actionConfig.headers?.parse(args?.headers ?? {}) ??
-      {}
+      args?.headers ?? {}
 
   const stringifiedHeaders = stringifyEntries(parsedHeaders)
   init = deepMerge(init as object, args?.init ?? {} as object)
@@ -350,14 +349,15 @@ function createBody(
   body?: BodyInit
   contentType?: string
 } {
-  if (!actionConfig.body || !args?.body) {
+  if (!args?.body || !actionConfig.body) {
     return {}
   }
 
   const bodySource = actionConfig.bodySource ?? "json"
 
-  const parsed = actionConfig.body._transform?.(args.body) ??
-    actionConfig.body.parse(args.body)
+  const parsed = actionConfig.body?._transform?.(args.body) ??
+    actionConfig.body?.parse(args.body) ??
+    args.body
 
   switch (bodySource) {
     case "json": {
@@ -412,12 +412,14 @@ async function parseData(
   actionConfig: ActionConfig<any>,
   res: Response,
 ) {
-  if (!res.ok || !actionConfig.data) {
+  if (!res.ok || (!actionConfig.data && !actionConfig.dataSource)) {
     await res.body?.cancel()
     return null
   }
 
   const dataSource = actionConfig.dataSource ?? "json"
   const data = await res[dataSource]()
-  return actionConfig.data._transform?.(data) ?? actionConfig.data.parse(data)
+
+  return actionConfig.data?._transform?.(data) ??
+    actionConfig.data?.parse(data) ?? data
 }
