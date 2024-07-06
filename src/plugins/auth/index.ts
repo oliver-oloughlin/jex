@@ -18,12 +18,11 @@
  *   endpoints: {
  *     // ...
  *   },
- * })
  * ```
  *
  * ## Bearer Auth
  *
- * Bearer/Token authentication using a bearer token.
+ * Bearer (token) authentication.
  *
  * @example
  * ```ts

@@ -11,7 +11,6 @@ import type {
   Plugin,
   PluginAfterContext,
   PluginBeforeContext,
-  PluginBeforeInit,
   PossibleActionArgs,
   Result,
 } from "./types.ts"
@@ -154,14 +153,13 @@ function createUrl(
 
   const url = new URL(urlPath)
 
-  if (actionConfig.query) {
-    const parsed = (
-      actionConfig.query._transform?.(query ?? {}) ??
-        actionConfig.query.parse(query ?? {})
-    ) as Record<string, any>
+  if (query || actionConfig.query) {
+    const parsed = actionConfig.query?._transform?.(query ?? {}) ??
+      actionConfig.query?.parse(query ?? {}) ??
+      query
 
     Object
-      .entries(parsed)
+      .entries(parsed as Record<string, any>)
       .forEach(([name, value]) => {
         url.searchParams.append(name, value.toString())
       })
@@ -186,10 +184,7 @@ async function createInitAndUrl(
     args,
   )
 
-  let pluginInit: Required<PluginBeforeInit> = {
-    init: {},
-    query: {},
-  }
+  let init: RequestInit = {}
 
   let ctx: PluginBeforeContext<Fetcher> = {
     id,
@@ -198,37 +193,36 @@ async function createInitAndUrl(
     action: actionConfig,
     url,
     method,
-    init: pluginInit.init,
+    init,
     args,
   }
 
   for (const plugin of clientConfig.plugins ?? []) {
     ctx = {
       ...ctx,
-      init: pluginInit.init,
+      init,
     }
-    pluginInit = await applyBefore(pluginInit, ctx, plugin)
+    init = await applyBefore(init, ctx, plugin)
   }
 
   for (const plugin of endpointConfig.plugins ?? []) {
     ctx = {
       ...ctx,
-      init: pluginInit.init,
+      init,
     }
-    pluginInit = await applyBefore(pluginInit, ctx, plugin)
+    init = await applyBefore(init, ctx, plugin)
   }
 
   for (const plugin of actionConfig.plugins ?? []) {
     ctx = {
       ...ctx,
-      init: pluginInit.init,
+      init,
     }
-    pluginInit = await applyBefore(pluginInit, ctx, plugin)
+    init = await applyBefore(init, ctx, plugin)
   }
 
   const bodyData = createBody(actionConfig, args)
 
-  let init = pluginInit.init
   init = deepMerge(init as object, {
     body: bodyData.body,
     ...(bodyData.contentType
@@ -241,18 +235,14 @@ async function createInitAndUrl(
   })
 
   const parsedHeaders =
-    actionConfig?.headers?._transform?.(args?.headers ?? {}) ??
+    actionConfig.headers?._transform?.(args?.headers ?? {}) ??
       actionConfig.headers?.parse(args?.headers ?? {}) ??
-      {}
+      args?.headers ?? {}
 
   const stringifiedHeaders = stringifyEntries(parsedHeaders)
   init = deepMerge(init as object, args?.init ?? {} as object)
   init = deepMerge(init as object, { headers: stringifiedHeaders })
   init = deepMerge(init as object, { method })
-
-  Object.entries(pluginInit.query).forEach(([key, val]) => {
-    url.searchParams.append(key, val.toString())
-  })
 
   return {
     init,
@@ -318,14 +308,22 @@ async function sendRequest(
 }
 
 async function applyBefore(
-  init: Required<PluginBeforeInit>,
+  init: RequestInit,
   ctx: PluginBeforeContext<Fetcher>,
   plugin: Plugin<Fetcher>,
-): Promise<Required<PluginBeforeInit>> {
+): Promise<RequestInit> {
   if (!plugin.before) return init
+
   const result = await plugin.before(ctx)
-  if (result) return deepMerge(init as object, result)
-  return init
+  if (!result) return init
+
+  if (result.query) {
+    Object.entries(result.query).forEach(([key, val]) => {
+      ctx.url.searchParams.append(key, val.toString())
+    })
+  }
+
+  return result.init ?? init
 }
 
 async function applyAfter(
@@ -351,14 +349,15 @@ function createBody(
   body?: BodyInit
   contentType?: string
 } {
-  if (!actionConfig.body || !args?.body) {
+  if (!args?.body || !actionConfig.body) {
     return {}
   }
 
   const bodySource = actionConfig.bodySource ?? "json"
 
-  const parsed = actionConfig.body._transform?.(args.body) ??
-    actionConfig.body.parse(args.body)
+  const parsed = actionConfig.body?._transform?.(args.body) ??
+    actionConfig.body?.parse(args.body) ??
+    args.body
 
   switch (bodySource) {
     case "json": {
@@ -413,12 +412,14 @@ async function parseData(
   actionConfig: ActionConfig<any>,
   res: Response,
 ) {
-  if (!res.ok || !actionConfig.data) {
+  if (!res.ok || (!actionConfig.data && !actionConfig.dataSource)) {
     await res.body?.cancel()
     return null
   }
 
   const dataSource = actionConfig.dataSource ?? "json"
   const data = await res[dataSource]()
-  return actionConfig.data._transform?.(data) ?? actionConfig.data.parse(data)
+
+  return actionConfig.data?._transform?.(data) ??
+    actionConfig.data?.parse(data) ?? data
 }

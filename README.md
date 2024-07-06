@@ -180,7 +180,7 @@ const client = jex({
 // With specified log function
 const client = jex({
   baseUrl: "https://domain.com/api",
-  plugins: [logger(console.info)],
+  plugins: [logger({ fn: console.info })],
   endpoints: {},
 })
 ```
@@ -203,7 +203,7 @@ const client = jex({
 })
 ```
 
-#### Basic Auth
+#### Bearer Auth
 
 Provides bearer (token) authentication.
 
