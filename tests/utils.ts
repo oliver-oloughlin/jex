@@ -6,7 +6,6 @@ import {
   type Schema,
   schema,
 } from "../mod.ts"
-import { logger } from "../src/plugins/logger/logger.ts"
 
 type Data = {
   args: Record<string, any>
@@ -47,7 +46,7 @@ export function createClient<TArgs extends Args = Record<string, string>>(
 
   return jex({
     baseUrl: "https://httpbin.org",
-    plugins: [logger(), ...(args?.plugins ?? [])],
+    plugins: args?.plugins,
     endpoints: {
       "/anything": {
         get: getAnything,
