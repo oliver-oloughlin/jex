@@ -1,4 +1,5 @@
 import type { Plugin, PluginBeforeInit } from "../../types.ts"
+import { encodeBase64 } from "@std/encoding/base64"
 
 export type BasicAuthOptions = {
   username: string
@@ -16,7 +17,7 @@ class BasicAuth implements Plugin {
     username,
     password,
   }: BasicAuthOptions) {
-    const encoded = btoa(`${username}:${password}`)
+    const encoded = encodeBase64(`${username}:${password}`)
     this.token = `Basic ${encoded}`
   }
 
