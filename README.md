@@ -205,7 +205,8 @@ const client = jex({
 
 #### Bearer Auth
 
-Provides bearer (token) authentication.
+Provides bearer (token) authentication. Accepts both a static bearer token or
+config for fetching a token from a server endpoint.
 
 ```ts
 import { jex } from "@olli/jex"
@@ -213,7 +214,29 @@ import { bearerAuth } from "@olli/jex/auth"
 
 const client = jex({
   baseUrl: "https://domain.com/api",
-  plugins: [bearerAuth("super_secret_token")],
+  // Static token
+  plugins: [bearerAuth({ token: "super_secret_token" })],
+  endpoints: {},
+})
+```
+
+```ts
+import { jex, schema } from "@olli/jex"
+import { bearerAuth } from "@olli/jex/auth"
+
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  // Dynamically fetched token using basic auth
+  plugins: [bearerAuth({
+    tokenUrl: "https://domain.com/api/token",
+    tokenSchema: schema<{ token: string; expiresAt: number }>(),
+    mapper: (data) => data.token,
+    validator: (data) => data.expiresAt > Date.now(),
+    credentials: {
+      username: "olli",
+      password: "banana123",
+    },
+  })],
   endpoints: {},
 })
 ```

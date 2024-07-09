@@ -356,9 +356,8 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
     ctx: PluginBeforeContext<TFetcher>,
   ):
     | PluginBeforeInit
-    | Promise<PluginBeforeInit>
     | void
-    | Promise<void>
+    | Promise<PluginBeforeInit | void>
 
   /**
    * Runs after a response is received.
@@ -371,9 +370,8 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
     ctx: PluginAfterContext<TFetcher>,
   ):
     | Response
-    | Promise<Response>
     | void
-    | Promise<void>
+    | Promise<Response | void>
 }
 
 /** Options that can be applied before a request is sent */

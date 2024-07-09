@@ -1,7 +1,8 @@
 import { basicAuth } from "../../src/plugins/auth/basic.ts"
 import { assert, assertEquals } from "@std/assert"
-import { createClient } from "../utils.ts"
+import { type AnythingData, createClient } from "../utils.ts"
 import { bearerAuth } from "../../src/plugins/auth/bearer.ts"
+import { schema } from "../../mod.ts"
 
 const USERNAME = "user"
 const PASSWORD = "pass"
@@ -17,12 +18,44 @@ const basic = createClient({
 
 const token = "78h23gbd3489hf7f2879fb7298f3"
 
-const bearerWithout = createClient({
-  plugins: [bearerAuth(token)],
+const staticBearerWithout = createClient({
+  plugins: [bearerAuth({ token })],
 })
 
-const bearerWith = createClient({
-  plugins: [bearerAuth(`Bearer ${token}`)],
+const staticBearerWith = createClient({
+  plugins: [bearerAuth({ token: `Bearer ${token}` })],
+})
+
+const dynamicBearerWithout = createClient({
+  plugins: [bearerAuth({
+    tokenUrl: "https://httpbin.org/anything",
+    tokenSchema: schema<AnythingData>(),
+    mapper: (data) => data.json.token,
+    validator: (data) => data.json.expiresAt > Date.now(),
+    init: {
+      method: "POST",
+      body: JSON.stringify({
+        token,
+        expiresAt: Date.now() + 60 * 60 * 1_000,
+      }),
+    },
+  })],
+})
+
+const dynamicBearerWith = createClient({
+  plugins: [bearerAuth({
+    tokenUrl: "https://httpbin.org/anything",
+    tokenSchema: schema<AnythingData>(),
+    mapper: (data) => data.json.token,
+    validator: (data) => data.json.expiresAt > Date.now(),
+    init: {
+      method: "POST",
+      body: JSON.stringify({
+        token: `Bearer ${token}`,
+        expiresAt: Date.now() + 60 * 60 * 1_000,
+      }),
+    },
+  })],
 })
 
 Deno.test("plugins - auth", async (t) => {
@@ -46,9 +79,9 @@ Deno.test("plugins - auth", async (t) => {
 
   await t.step("bearer", async (t) => {
     await t.step(
-      "Should set Authorization header as bearer token (without 'Basic')",
+      "Should set Authorization header as static bearer token (without 'Basic')",
       async () => {
-        const res = await bearerWithout["/anything"].get()
+        const res = await staticBearerWithout["/anything"].get()
         assert(res.ok)
         const auth = res.data.headers.Authorization
         assert(auth.startsWith("Bearer "))
@@ -57,9 +90,43 @@ Deno.test("plugins - auth", async (t) => {
     )
 
     await t.step(
-      "Should set Authorization header as bearer token (with 'Basic')",
+      "Should set Authorization header as static bearer token (with 'Basic')",
       async () => {
-        const res = await bearerWith["/anything"].get()
+        const res = await staticBearerWith["/anything"].get()
+        assert(res.ok)
+        const auth = res.data.headers.Authorization
+        assert(auth.startsWith("Bearer "))
+        assertEquals(auth.replace("Bearer ", ""), token)
+      },
+    )
+
+    await t.step(
+      "Should set Authorization header as dynamic bearer token (without 'Basic')",
+      async () => {
+        await dynamicBearerWithout["/anything"].get()
+        const res = await dynamicBearerWithout["/anything"].get()
+        assert(res.ok)
+        const auth = res.data.headers.Authorization
+        assert(auth.startsWith("Bearer "))
+        assertEquals(auth.replace("Bearer ", ""), token)
+      },
+    )
+
+    await t.step(
+      "Should set Authorization header as dynamic bearer token (without 'Basic')",
+      async () => {
+        const res = await dynamicBearerWithout["/anything"].get()
+        assert(res.ok)
+        const auth = res.data.headers.Authorization
+        assert(auth.startsWith("Bearer "))
+        assertEquals(auth.replace("Bearer ", ""), token)
+      },
+    )
+
+    await t.step(
+      "Should set Authorization header as dynamic bearer token (with 'Basic')",
+      async () => {
+        const res = await dynamicBearerWith["/anything"].get()
         assert(res.ok)
         const auth = res.data.headers.Authorization
         assert(auth.startsWith("Bearer "))

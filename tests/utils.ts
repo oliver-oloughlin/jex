@@ -7,7 +7,7 @@ import {
   schema,
 } from "../mod.ts"
 
-type Data = {
+export type AnythingData = {
   args: Record<string, any>
   data: string
   files: Record<string, any>
@@ -31,18 +31,20 @@ export function createClient<TArgs extends Args = Record<string, string>>(
 ) {
   const getAnything = {
     ...args?.getAnything,
-    data: schema<Data>(),
-  } as { data: Schema<Data, Data> } & TArgs["getAnything"]
+    data: schema<AnythingData>(),
+  } as { data: Schema<AnythingData, AnythingData> } & TArgs["getAnything"]
 
   const postAnything = {
     ...args?.postAnything,
-    data: schema<Data>(),
-  } as { data: Schema<Data, Data> } & TArgs["postAnything"]
+    data: schema<AnythingData>(),
+  } as { data: Schema<AnythingData, AnythingData> } & TArgs["postAnything"]
 
   const getAnythingWithParam = {
     ...args?.getAnythingWithParam,
-    data: schema<Data>(),
-  } as { data: Schema<Data, Data> } & TArgs["getAnythingWithParam"]
+    data: schema<AnythingData>(),
+  } as
+    & { data: Schema<AnythingData, AnythingData> }
+    & TArgs["getAnythingWithParam"]
 
   return jex({
     baseUrl: "https://httpbin.org",

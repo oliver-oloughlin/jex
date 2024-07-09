@@ -1,4 +1,64 @@
-import type { Plugin, PluginBeforeInit } from "../../types.ts"
+import { encodeBase64 } from "jsr:@std/encoding@^1.0.0/base64"
+import type {
+  DataSource,
+  Fetcher,
+  Plugin,
+  PluginAfterContext,
+  PluginBeforeContext,
+  PluginBeforeInit,
+  Schema,
+} from "../../types.ts"
+import { HttpStatusCode } from "../../http_status_code.ts"
+
+export type BearerAuthOptions<TData, TToken> =
+  | StaticBearerAuthOptions
+  | DynamicBearerAuthOptions<TData, TToken>
+
+export type StaticBearerAuthOptions = {
+  /** A static bearer token. */
+  token: string
+}
+
+export type DynamicBearerAuthOptions<TData, TToken> = {
+  /** Absolute URL of where to fetch the bearer token from. */
+  tokenUrl: string
+
+  /** Schema of token data. */
+  tokenSchema?: Schema<TData, TToken>
+
+  /**
+   * What source to extract the token data from the response.
+   *
+   * @default "json"
+   */
+  tokenSource?: DataSource
+
+  /** Request options.
+   *
+   * Can be used to set the token request body, method, or other options that need to be overriden.
+   */
+  init?: RequestInit
+
+  /** Credentials for basic authentication based server login. */
+  credentials?: {
+    username: string
+    password: string
+  }
+
+  /**
+   * Mapper function from the data returned by the token endpoint to the token string.
+   *
+   * If not specified, the returned data is used directly as the token.
+   */
+  mapper?: (token: TToken) => string
+
+  /**
+   * Validator function for validating if the current token is still valid or not.
+   *
+   * If specified, tokens are validated before new requests are made, and are refreshed if the validator returns `false`.
+   */
+  validator?: (token: TToken) => boolean
+}
 
 /**
  * Bearer (token) authentication plugin.
@@ -13,32 +73,157 @@ import type { Plugin, PluginBeforeInit } from "../../types.ts"
  *
  * const client = jex({
  *   baseUrl: "https://domain.com/api",
- *   plugins: [bearerAuth("super_secret_token")],
+ *   // Static token
+ *   plugins: [bearerAuth({ token: "super_secret_token" })],
+ *   endpoints: {
+ *     // ...
+ *   },
+ * })
+ * ```
+ *
+ * @example
+ * ```ts
+ * import { jex, schema } from "@olli/jex"
+ * import { bearerAuth } from "@olli/jex/auth"
+ *
+ * // Dynamic token with basic auth
+ * const client = jex({
+ *   baseUrl: "https://domain.com/api",
+ *   plugins: [bearerAuth({
+ *     tokenUrl: "https://domain.com/api/token",
+ *     tokenSchema: schema<{ token: string, expiresAt: number }>(),
+ *     mapper: (data) => data.token,
+ *     validator: (data) => data.expiresAt > Date.now(),
+ *     credentials: {
+ *       username: "olli",
+ *       password: "banana123",
+ *     }
+ *   })],
  *   endpoints: {
  *     // ...
  *   },
  * })
  * ```
  */
-export function bearerAuth(token: string): Plugin {
-  return new BearerAuth(token)
+export function bearerAuth<TData, TToken>(
+  options: BearerAuthOptions<TData, TToken>,
+): Plugin {
+  return new BearerAuth(options)
 }
 
-class BearerAuth implements Plugin {
-  private token: string
+type StaticStrategy = {
+  strategy: "static"
+  token: string
+}
 
-  constructor(token: string) {
-    if (token.toLowerCase().includes("bearer")) this.token = token
-    else this.token = `Bearer ${token}`
+type DynamicStrategy<TData, TToken> = {
+  strategy: "dynamic"
+  basic: string | null
+} & Omit<DynamicBearerAuthOptions<TData, TToken>, "credentials">
+
+class BearerAuth<TData, TToken> implements Plugin {
+  private dynamicToken: TToken | null
+  private options: StaticStrategy | DynamicStrategy<TData, TToken>
+
+  constructor(options: BearerAuthOptions<TData, TToken>) {
+    this.dynamicToken = null
+
+    if ((options as StaticBearerAuthOptions).token) {
+      this.options = {
+        strategy: "static",
+        token: parseToken((options as StaticBearerAuthOptions).token),
+      }
+    } else {
+      const opts = options as DynamicBearerAuthOptions<TData, TToken>
+      this.options = {
+        strategy: "dynamic",
+        ...opts,
+        basic: opts.credentials
+          ? encodeBase64(
+            `${opts.credentials.username}:${opts.credentials.password}`,
+          )
+          : null,
+      }
+    }
   }
 
-  before(): PluginBeforeInit {
+  async before(ctx: PluginBeforeContext<Fetcher>): Promise<PluginBeforeInit> {
+    // Set authorization header as token if static strategy
+    if (this.options.strategy === "static") {
+      return {
+        init: {
+          headers: {
+            Authorization: this.options.token,
+          },
+        },
+      }
+    }
+
+    // Set authorization header to dynamic token
+    const token = await this.getParsedDynamicToken(ctx.client.fetcher ?? fetch)
+
     return {
       init: {
         headers: {
-          Authorization: this.token,
+          Authorization: token,
         },
       },
     }
   }
+
+  async after(
+    ctx: PluginAfterContext<Fetcher>,
+  ): Promise<Response | void> {
+    const isRetryable = this.options.strategy !== "static" && (
+      !ctx.res.ok ||
+      ctx.res.status === HttpStatusCode.Unauthorized ||
+      ctx.res.status === HttpStatusCode.Forbidden
+    )
+
+    if (!isRetryable) return
+
+    const token = await this.getParsedDynamicToken(ctx.client.fetcher ?? fetch)
+
+    return await ctx.refetch({
+      headers: {
+        Authorization: token,
+      },
+    })
+  }
+
+  private async getParsedDynamicToken(fetcher: Fetcher) {
+    // Should never happen
+    if (this.options.strategy === "static") return this.options.token
+
+    // If no valid token, fetch dynamic token
+    if (
+      !this.dynamicToken ||
+      this.options.validator?.(this.dynamicToken) === false
+    ) {
+      const headers = {
+        ...this.options.init?.headers,
+        ...(this.options.basic ? { Authorization: this.options.basic } : {}),
+      }
+
+      const res = await fetcher(this.options.tokenUrl, {
+        ...this.options.init,
+        headers,
+      })
+
+      const dataSource = this.options.tokenSource ?? "json"
+      const data = await res[dataSource]()
+
+      this.dynamicToken = this.options.tokenSchema?._transform?.(data) ??
+        this.options.tokenSchema?.parse(data) ??
+        data
+    }
+
+    // Return mapped and parsed token
+    const token = this.options.mapper?.(this.dynamicToken!) ?? this.dynamicToken
+    return parseToken(token?.toString() ?? "")
+  }
+}
+
+function parseToken(token: string) {
+  return token.toLowerCase().includes("bearer") ? token : `Bearer ${token}`
 }
