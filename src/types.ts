@@ -376,7 +376,7 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
 
 /** Options that can be applied before a request is sent */
 export type PluginBeforeInit<TFetcher extends Fetcher = Fetcher> = {
-  init?: FetcherInit<TFetcher>
+  init?: StrippedRequestInit<FetcherInit<TFetcher>>
   query?: Record<string, string>
 }
 
@@ -388,7 +388,7 @@ export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
   action: ActionConfig<TFetcher>
   url: URL
   method: Method
-  init: FetcherInit<TFetcher>
+  init: StrippedRequestInit<FetcherInit<TFetcher>>
   args?: PossibleActionArgs
 }
 
