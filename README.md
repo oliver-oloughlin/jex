@@ -275,6 +275,26 @@ const client = jex({
 })
 ```
 
+#### Default Init
+
+Set default request options that will always be applied for the given plugin
+scope unless overridden.
+
+```ts
+import { jex } from "@olli/jex"
+import { defaultInit } from "@olli/jex/init"
+
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  plugins: [defaultInit({
+    headers: {
+      "x-client-id": "my-app",
+    },
+  })],
+  endpoints: {},
+})
+```
+
 ## Development
 
 Any contributions are welcomed and appreciated. How to contribute:

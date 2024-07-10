@@ -1,12 +1,13 @@
 {
   "name": "@olli/jex",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "exports": {
     ".": "./mod.ts",
     "./auth": "./src/plugins/auth/index.ts",
     "./throttle": "./src/plugins/throttle/index.ts",
     "./retry": "./src/plugins/retry/index.ts",
-    "./logger": "./src/plugins/logger/index.ts"
+    "./logger": "./src/plugins/logger/index.ts",
+    "./init": "./src/plugins/init/index.ts"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@0.226.0",
