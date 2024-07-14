@@ -275,6 +275,22 @@ const client = jex({
 })
 ```
 
+#### Rate Throttle
+
+Throttle requests based on a request rate limit.
+
+```ts
+import { jex } from "@olli/jex"
+import { rateThrottle } from "@olli/jex/throttle"
+
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  // Throttles requests to 100 per minute
+  plugins: [rateThrottle("100/min")],
+  endpoints: {},
+})
+```
+
 #### Default Init
 
 Set default request options that will always be applied for the given plugin
