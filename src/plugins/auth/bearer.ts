@@ -29,9 +29,11 @@ export type DynamicBearerAuthOptions<TData, TToken> = {
   /**
    * What source to extract the token data from the response.
    *
+   * Can either be a data source, or function that takes the response as argument and returns the token data.
+   *
    * @default "json"
    */
-  tokenSource?: DataSource
+  tokenSource?: DataSource | ((res: Response) => TData | Promise<TData>)
 
   /** Request options.
    *
@@ -211,7 +213,10 @@ class BearerAuth<TData, TToken> implements Plugin {
       })
 
       const dataSource = this.options.tokenSource ?? "json"
-      const data = await res[dataSource]()
+
+      const data = typeof dataSource === "function"
+        ? await dataSource(res)
+        : await res[dataSource]()
 
       this.dynamicToken = this.options.tokenSchema?._transform?.(data) ??
         this.options.tokenSchema?.parse(data) ??
