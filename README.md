@@ -1,5 +1,10 @@
 # jex
 
+[![Release](https://img.shields.io/github/release/oliver-oloughlin/jex)](https://github.com/oliver-oloughlin/jex/releases)
+[![Score](https://jsr.io/badges/@olli/jex/score)](https://jsr.io/@olli/jex/score)
+[![Tests](https://img.shields.io/github/actions/workflow/status/oliver-oloughlin/jex/test.yml?label=tests)](https://github.com/oliver-oloughlin/jex/actions/workflows/test.yml)
+[![License](https://img.shields.io/github/license/oliver-oloughlin/jex)](https://github.com/oliver-oloughlin/jex/blob/main/LICENSE)
+
 `jex` is a configurable API client that lets you define strongly-typed HTTP
 calls using a JSON-like schema. Data types can be defined and validated using
 any third-party library of your choosing, such as Zod, or you can use the
