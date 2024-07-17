@@ -1,6 +1,6 @@
 {
   "name": "@olli/jex",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "exports": {
     ".": "./mod.ts",
     "./auth": "./src/plugins/auth/index.ts",

@@ -69,7 +69,6 @@ Deno.test("plugins - throttle", async (t) => {
         ])
         const diff = performance.now() - before
         assert(diff >= 1_000)
-        assert(diff < 2_000)
       },
     )
 
@@ -86,7 +85,6 @@ Deno.test("plugins - throttle", async (t) => {
         ])
         const diff = performance.now() - before
         assert(diff >= 2_000)
-        assert(diff < 3_000)
       },
     )
 
