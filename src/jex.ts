@@ -151,7 +151,12 @@ function createUrl(
       })
   }
 
-  const url = new URL(urlPath)
+  let url: URL
+  try {
+    url = new URL(urlPath)
+  } catch (_) {
+    url = new URL(urlPath, location.toString())
+  }
 
   if (query || actionConfig.query) {
     const parsed = actionConfig.query?._transform?.(query ?? {}) ??

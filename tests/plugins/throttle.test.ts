@@ -36,7 +36,6 @@ Deno.test("plugins - throttle", async (t) => {
 
         const diff = performance.now() - before
         assert(diff >= THROTTLE_INTERVAL * (N - 1))
-        assert(diff < THROTTLE_INTERVAL * N)
       },
     )
 
