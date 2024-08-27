@@ -83,7 +83,7 @@ export type BodylessActionConfig<TFetcher extends Fetcher = Fetcher> = {
    *
    * @default "json"
    */
-  dataSource?: "json" | "text" | "blob" | "arrayBuffer" | "bytes" | "formData"
+  dataSource?: "json" | "text" | "blob" | "arrayBuffer" | "formData"
 
   /**
    * Schema for the query that this action takes as argument.
