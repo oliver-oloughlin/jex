@@ -4,8 +4,8 @@
     "specifiers": {
       "jsr:@std/assert@0.226.0": "jsr:@std/assert@0.226.0",
       "jsr:@std/collections@1.0.0": "jsr:@std/collections@1.0.0",
-      "jsr:@std/encoding@^1.0.0": "jsr:@std/encoding@1.0.0",
-      "jsr:@std/fmt@^0.225.5": "jsr:@std/fmt@0.225.5",
+      "jsr:@std/encoding@^1.0.0": "jsr:@std/encoding@1.0.3",
+      "jsr:@std/fmt@^0.225.5": "jsr:@std/fmt@0.225.6",
       "jsr:@std/internal@^1.0.0": "jsr:@std/internal@1.0.0",
       "jsr:@std/ulid@0.224.1": "jsr:@std/ulid@0.224.1"
     },
@@ -19,11 +19,11 @@
       "@std/collections@1.0.0": {
         "integrity": "8e4e07ce1df7badae20b80f2678c3ca3bc14cae5514c4e1817a4668ba8b1adf2"
       },
-      "@std/encoding@1.0.0": {
-        "integrity": "3cabf87b3eadb69126b42998188c87155238ceef805af3f241acca00ddb0cbb2"
+      "@std/encoding@1.0.3": {
+        "integrity": "5dbc2d7f5aa6062de7e19862ea856ac7a0dcce0b6fb46bb7b332d3bdcd4408b7"
       },
-      "@std/fmt@0.225.5": {
-        "integrity": "38aa42528584873378a521f7842c1a1e99f0235d3f7d3db5ca02795312f439b8"
+      "@std/fmt@0.225.6": {
+        "integrity": "aba6aea27f66813cecfd9484e074a9e9845782ab0685c030e453a8a70b37afc8"
       },
       "@std/internal@1.0.0": {
         "integrity": "ac6a6dfebf838582c4b4f61a6907374e27e05bedb6ce276e0f1608fe84e7cd9a"

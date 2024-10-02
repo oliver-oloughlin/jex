@@ -127,11 +127,11 @@ function createUrl(
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
 ) {
-  const baseUrl = clientConfig.baseUrl
+  const baseUrl = clientConfig.baseUrl ?? "/"
   const query = args?.query
   const params = args?.params
 
-  let urlPath = baseUrl
+  let url = baseUrl
     .replace(/[/]{1}$/, "")
     .concat("/")
     .concat(
@@ -144,18 +144,11 @@ function createUrl(
     Object
       .entries(params)
       .forEach(([name, value]) => {
-        urlPath = urlPath.replace(`:${name}`, value.toString())
-        urlPath = urlPath.replace(`[${name}]`, value.toString())
-        urlPath = urlPath.replace(`{${name}}`, value.toString())
-        urlPath = urlPath.replace(`<${name}>`, value.toString())
+        url = url.replace(`:${name}`, value.toString())
+        url = url.replace(`[${name}]`, value.toString())
+        url = url.replace(`{${name}}`, value.toString())
+        url = url.replace(`<${name}>`, value.toString())
       })
-  }
-
-  let url: URL
-  try {
-    url = new URL(urlPath)
-  } catch (_) {
-    url = new URL(urlPath, location.toString())
   }
 
   if (query || actionConfig.query) {
@@ -165,8 +158,8 @@ function createUrl(
 
     Object
       .entries(parsed as Record<string, any>)
-      .forEach(([name, value]) => {
-        url.searchParams.append(name, value.toString())
+      .forEach(([key, value]) => {
+        url = appendQuery(url, key, value)
       })
   }
 
@@ -182,14 +175,24 @@ async function createInitAndUrl(
   method: Method,
   id: string,
 ) {
-  const url = createUrl(
+  let url = createUrl(
     path,
     clientConfig,
     actionConfig,
     args,
   )
 
-  let init: RequestInit = {}
+  const { body, contentType } = createBody(actionConfig, args)
+  let init = {
+    body,
+    ...(contentType
+      ? {
+        headers: {
+          "Content-Type": contentType,
+        },
+      }
+      : {}),
+  } as object
 
   let ctx: PluginBeforeContext<Fetcher> = {
     id,
@@ -198,46 +201,21 @@ async function createInitAndUrl(
     action: actionConfig,
     url,
     method,
-    init,
-    args,
+    init: init,
+    args: args ?? {},
   }
 
   for (const plugin of clientConfig.plugins ?? []) {
-    ctx = {
-      ...ctx,
-      init,
-    }
-    init = await applyBefore(init, ctx, plugin)
+    ctx = await applyBefore(ctx, plugin)
   }
 
   for (const plugin of endpointConfig.plugins ?? []) {
-    ctx = {
-      ...ctx,
-      init,
-    }
-    init = await applyBefore(init, ctx, plugin)
+    ctx = await applyBefore(ctx, plugin)
   }
 
   for (const plugin of actionConfig.plugins ?? []) {
-    ctx = {
-      ...ctx,
-      init,
-    }
-    init = await applyBefore(init, ctx, plugin)
+    ctx = await applyBefore(ctx, plugin)
   }
-
-  const bodyData = createBody(actionConfig, args)
-
-  init = deepMerge(init as object, {
-    body: bodyData.body,
-    ...(bodyData.contentType
-      ? {
-        headers: {
-          "Content-Type": bodyData.contentType,
-        },
-      }
-      : {}),
-  })
 
   const parsedHeaders =
     actionConfig.headers?._transform?.(args?.headers ?? {}) ??
@@ -245,9 +223,13 @@ async function createInitAndUrl(
       args?.headers ?? {}
 
   const stringifiedHeaders = stringifyEntries(parsedHeaders)
-  init = deepMerge(init as object, args?.init ?? {} as object)
+  init = deepMerge(ctx.init as object, args?.init ?? {} as object)
   init = deepMerge(init as object, { headers: stringifiedHeaders })
   init = deepMerge(init as object, { method })
+
+  Object.entries(ctx.args?.query ?? {}).forEach(([key, value]) => {
+    url = appendQuery(url, key, value)
+  })
 
   return {
     init,
@@ -261,7 +243,7 @@ async function sendRequest(
   actionConfig: ActionConfig<any>,
   args: PossibleActionArgs | undefined,
   init: RequestInit,
-  url: URL,
+  url: string,
   method: Method,
   id: string,
 ): Promise<Response> {
@@ -274,7 +256,7 @@ async function sendRequest(
     endpoint: endpointConfig,
     action: actionConfig,
     init,
-    args,
+    args: args ?? {},
     url,
     method,
     res,
@@ -313,22 +295,19 @@ async function sendRequest(
 }
 
 async function applyBefore(
-  init: RequestInit,
   ctx: PluginBeforeContext<Fetcher>,
   plugin: Plugin<Fetcher>,
-): Promise<RequestInit> {
-  if (!plugin.before) return init
+): Promise<PluginBeforeContext<Fetcher>> {
+  if (!plugin.before) return ctx
 
   const result = await plugin.before(ctx)
-  if (!result) return init
+  if (!result) return ctx
 
-  if (result.query) {
-    Object.entries(result.query).forEach(([key, val]) => {
-      ctx.url.searchParams.append(key, val.toString())
-    })
-  }
-
-  return result.init ?? init
+  const { query, ...init2 } = result
+  return deepMerge(ctx as object, {
+    init: init2,
+    args: { query },
+  } as object) as PluginBeforeContext<Fetcher>
 }
 
 async function applyAfter(
@@ -427,4 +406,8 @@ async function parseData(
 
   return actionConfig.data?._transform?.(data) ??
     actionConfig.data?.parse(data) ?? data
+}
+
+function appendQuery(url: string, key: string, value: any) {
+  return url += `${url.includes("?") ? "&" : "?"}${key}=${value.toString()}`
 }

@@ -153,10 +153,8 @@ class BearerAuth<TData, TToken> implements Plugin {
     // Set authorization header as token if static strategy
     if (this.options.strategy === "static") {
       return {
-        init: {
-          headers: {
-            Authorization: this.options.token,
-          },
+        headers: {
+          Authorization: this.options.token,
         },
       }
     }
@@ -165,10 +163,8 @@ class BearerAuth<TData, TToken> implements Plugin {
     const token = await this.getParsedDynamicToken(ctx.client.fetcher ?? fetch)
 
     return {
-      init: {
-        headers: {
-          Authorization: token,
-        },
+      headers: {
+        Authorization: token,
       },
     }
   }

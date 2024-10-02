@@ -126,11 +126,20 @@ class Logger implements Plugin {
     this.fn(text)
   }
 
-  private urlToString(url: URL) {
-    let urlStr = ""
-    if (this.origin) urlStr += url.origin
-    urlStr += url.pathname
-    if (this.query) urlStr += url.search
+  private urlToString(url: string) {
+    let urlStr = url
+    try {
+      const parsed = new URL(url)
+      if (this.origin) urlStr += parsed.origin
+      urlStr += parsed.pathname
+      if (this.query) urlStr += parsed.search
+      return urlStr
+    } catch (_) {
+      if (!this.query) {
+        const [host, _] = urlStr.split("?")
+        urlStr = host
+      }
+    }
     return urlStr
   }
 

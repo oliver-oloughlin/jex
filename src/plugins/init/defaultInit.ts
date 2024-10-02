@@ -46,8 +46,6 @@ class DefaultInit<TFetcher extends Fetcher> implements Plugin<TFetcher> {
   }
 
   before(): PluginBeforeInit<TFetcher> {
-    return {
-      init: this.init,
-    }
+    return this.init
   }
 }
