@@ -75,7 +75,7 @@ const dynamicBearerCustomSource = createClient({
   })],
 })
 
-Deno.test.only("plugins - auth", async (t) => {
+Deno.test("plugins - auth", async (t) => {
   await t.step("basic", async (t) => {
     await t.step("Should set Authorization header as basic auth", async () => {
       const res = await basic["/anything"].get()
