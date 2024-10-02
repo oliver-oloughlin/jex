@@ -15,8 +15,9 @@ export type ClientConfig<
    * Base API url.
    *
    * @example "https://domain.com/api"
+   * @default "/"
    */
-  baseUrl: string
+  baseUrl?: string
 
   /** Record of configured HTTP endpoints */
   endpoints: TEndpointRecord
@@ -296,7 +297,6 @@ export type DataSource =
   | "text"
   | "blob"
   | "arrayBuffer"
-  | "bytes"
   | "formData"
 
 /** Source of request body. */
@@ -333,7 +333,7 @@ type Input<TSchema extends Schema<any, any>> = TSchema["_input"]
 export type Fetcher = (
   url: string | URL,
   init?: RequestInit,
-) => Promise<Response>
+) => Response | Promise<Response>
 
 /** Available request options for fetcher function. */
 export type FetcherInit<TFetcher extends Fetcher = Fetcher> = Exclude<
@@ -375,10 +375,11 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
 }
 
 /** Options that can be applied before a request is sent */
-export type PluginBeforeInit<TFetcher extends Fetcher = Fetcher> = {
-  init?: StrippedRequestInit<FetcherInit<TFetcher>>
-  query?: Record<string, string>
-}
+export type PluginBeforeInit<TFetcher extends Fetcher = Fetcher> =
+  & StrippedRequestInit<FetcherInit<TFetcher>>
+  & {
+    query?: Record<string, string>
+  }
 
 /** Context object from before a request is sent. */
 export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
@@ -386,7 +387,7 @@ export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
   client: ClientConfig<EndpointRecord<TFetcher>, TFetcher>
   endpoint: EndpointConfig<TFetcher>
   action: ActionConfig<TFetcher>
-  url: URL
+  url: string
   method: Method
   init: StrippedRequestInit<FetcherInit<TFetcher>>
   args?: PossibleActionArgs
@@ -417,5 +418,5 @@ type ParsePathParam<TPathPart extends string> = TPathPart extends
 /** Request options without method and body. */
 export type StrippedRequestInit<TInit extends RequestInit> = Omit<
   TInit,
-  "method" | "body"
+  "method"
 >

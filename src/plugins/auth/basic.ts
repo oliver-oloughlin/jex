@@ -47,10 +47,8 @@ class BasicAuth implements Plugin {
 
   before(): PluginBeforeInit {
     return {
-      init: {
-        headers: {
-          Authorization: this.token,
-        },
+      headers: {
+        Authorization: this.token,
       },
     }
   }
