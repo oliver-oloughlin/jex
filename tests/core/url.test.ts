@@ -1,7 +1,7 @@
 import { assert } from "@std/assert/assert"
 import { jex } from "../../mod.ts"
 
-Deno.test("core", async (t) => {
+Deno.test("core - url", async (t) => {
   await t.step(
     "Should successfully fetch using relative URL with baseURL",
     async () => {
