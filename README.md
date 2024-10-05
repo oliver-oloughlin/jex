@@ -43,6 +43,9 @@ bunx jsr add @olli/jex
 
 ### Create a basic API client
 
+Using the built-in schema builder provides type inference only, and does not do
+any runtime validation of data.
+
 ```ts
 import { jex, schema } from "@olli/jex"
 
@@ -109,6 +112,9 @@ if (result.ok) {
 ```
 
 ### Using Zod
+
+Using a data validation library such as Zod provides both type inference and
+runtime validation of data.
 
 ```ts
 import { jex } from "@olli/jex"
@@ -192,7 +198,7 @@ const client = jex({
 
 #### Basic Auth
 
-Provides basic authentication using the `Authorization` header.
+Provides basic authentication by setting the `Authorization` header.
 
 ```ts
 import { jex } from "@olli/jex"

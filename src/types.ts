@@ -120,7 +120,7 @@ export type BodyfullActionConfig<TFetcher extends Fetcher = Fetcher> =
     /**
      * Source in which the body will be sent.
      *
-     * Defaults to `json` for objects, while setting the body to the raw value for values that are a valid `BodyInit`.
+     * Defaults to `json` for objects, while setting the body to the raw value for values that are a valid body type.
      *
      * For object values, the Content-Type header is set appropriately for `json`, `URLSearchParamaters` and `FormData`.
      *
