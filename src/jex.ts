@@ -13,12 +13,6 @@ import type {
 import { ulid } from "@std/ulid"
 import { createInitAndUrl, parseData, sendRequest } from "./utils.ts"
 
-/**************/
-/*            */
-/*   PUBLIC   */
-/*            */
-/**************/
-
 export function jex<
   const TEndpointRecord extends EndpointRecord<TFetcher>,
   const TFetcher extends Fetcher = Fetcher,
@@ -36,12 +30,6 @@ export function jex<
     TFetcher
   >
 }
-
-/***************/
-/*             */
-/*   PRIVATE   */
-/*             */
-/***************/
 
 function createEndpoint(
   path: string,

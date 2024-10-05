@@ -150,21 +150,9 @@ class BearerAuth<TData, TToken> implements Plugin {
   }
 
   async before(ctx: PluginBeforeContext<Fetcher>): Promise<PluginBeforeInit> {
-    // Set authorization header as token if static strategy
-    if (this.options.strategy === "static") {
-      return {
-        headers: {
-          Authorization: this.options.token,
-        },
-      }
-    }
-
-    // Set authorization header to dynamic token
-    const token = await this.getParsedDynamicToken(ctx.client.fetcher ?? fetch)
-
     return {
       headers: {
-        Authorization: token,
+        Authorization: await this.getToken(ctx.client.fetcher ?? fetch),
       },
     }
   }
@@ -172,25 +160,21 @@ class BearerAuth<TData, TToken> implements Plugin {
   async after(
     ctx: PluginAfterContext<Fetcher>,
   ): Promise<Response | void> {
-    const isRetryable = this.options.strategy !== "static" && (
-      !ctx.res.ok ||
-      ctx.res.status === HttpStatusCode.Unauthorized ||
+    const isRetryable = this.options.strategy === "dynamic" &&
+        !ctx.res.ok &&
+        ctx.res.status === HttpStatusCode.Unauthorized ||
       ctx.res.status === HttpStatusCode.Forbidden
-    )
 
     if (!isRetryable) return
 
-    const token = await this.getParsedDynamicToken(ctx.client.fetcher ?? fetch)
-
     return await ctx.refetch({
       headers: {
-        Authorization: token,
+        Authorization: await this.getToken(ctx.client.fetcher ?? fetch),
       },
     })
   }
 
-  private async getParsedDynamicToken(fetcher: Fetcher) {
-    // Should never happen
+  private async getToken(fetcher: Fetcher) {
     if (this.options.strategy === "static") return this.options.token
 
     // If no valid token, fetch dynamic token
@@ -208,11 +192,11 @@ class BearerAuth<TData, TToken> implements Plugin {
         headers,
       })
 
-      const dataSource = this.options.tokenSource ?? "json"
+      const tokenSource = this.options.tokenSource ?? "json"
 
-      const data = typeof dataSource === "function"
-        ? await dataSource(res)
-        : await res[dataSource]()
+      const data = typeof tokenSource === "function"
+        ? await tokenSource(res)
+        : await res[tokenSource]()
 
       this.dynamicToken = this.options.tokenSchema?._transform?.(data) ??
         this.options.tokenSchema?.parse(data) ??

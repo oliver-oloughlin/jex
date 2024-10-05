@@ -12,12 +12,6 @@ import type {
   PossibleActionArgs,
 } from "./types.ts"
 
-/**************/
-/*            */
-/*   PUBLIC   */
-/*            */
-/**************/
-
 export function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms))
 }
@@ -168,23 +162,17 @@ export async function sendRequest(
   return res
 }
 
-/***************/
-/*             */
-/*   PRIVATE   */
-/*             */
-/***************/
-
-function appendQuery(url: string, key: string, value: any) {
+export function appendQuery(url: string, key: string, value: any) {
   return url += `${url.includes("?") ? "&" : "?"}${key}=${value.toString()}`
 }
 
-function stringifyEntries(obj: object) {
+export function stringifyEntries(obj: object) {
   return Object.fromEntries(
     Object.entries(obj).map(([key, val]) => [key, val.toString()]),
   )
 }
 
-async function applyAfter(
+export async function applyAfter(
   ctx: PluginAfterContext<Fetcher>,
   plugin: Plugin<Fetcher>,
 ): Promise<Response> {
@@ -194,7 +182,7 @@ async function applyAfter(
   return ctx.res
 }
 
-async function createBody(
+export async function createBody(
   actionConfig: BodyfullActionConfig<any>,
   args: PossibleActionArgs | undefined,
 ): Promise<{
@@ -270,7 +258,7 @@ async function createBody(
   }
 }
 
-function createUrl(
+export function createUrl(
   path: string,
   clientConfig: ClientConfig<any, Fetcher>,
   actionConfig: ActionConfig<any>,
@@ -315,7 +303,7 @@ function createUrl(
   return url
 }
 
-function isValidBody(value: unknown) {
+export function isValidBody(value: unknown) {
   if (value === undefined) return true
 
   if (typeof value === "object") {
@@ -344,7 +332,7 @@ function isValidBody(value: unknown) {
   return false
 }
 
-async function applyBefore(
+export async function applyBefore(
   ctx: PluginBeforeContext<Fetcher>,
   plugin: Plugin<Fetcher>,
 ): Promise<PluginBeforeContext<Fetcher>> {
