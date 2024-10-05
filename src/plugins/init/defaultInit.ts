@@ -1,10 +1,4 @@
-import type {
-  Fetcher,
-  FetcherInit,
-  Plugin,
-  PluginBeforeInit,
-  StrippedRequestInit,
-} from "../../types.ts"
+import type { Fetcher, Plugin, PluginBeforeInit } from "../../types.ts"
 
 /**
  * Default init plugin.
@@ -33,15 +27,15 @@ import type {
  * ```
  */
 export function defaultInit<TFetcher extends Fetcher = Fetcher>(
-  init: StrippedRequestInit<FetcherInit<TFetcher>>,
+  init: PluginBeforeInit<TFetcher>,
 ): Plugin<TFetcher> {
   return new DefaultInit(init)
 }
 
 class DefaultInit<TFetcher extends Fetcher> implements Plugin<TFetcher> {
-  private init: StrippedRequestInit<FetcherInit<TFetcher>>
+  private init: PluginBeforeInit<TFetcher>
 
-  constructor(init: StrippedRequestInit<FetcherInit<TFetcher>>) {
+  constructor(init: PluginBeforeInit<TFetcher>) {
     this.init = init
   }
 

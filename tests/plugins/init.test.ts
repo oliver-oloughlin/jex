@@ -7,7 +7,7 @@ const DEFAULT_HEADER_KEY = "X-Foo"
 const DEFAULT_HEADER_VALUE = "bar"
 const OVERRIDE_HEADER_VALUE = "baz"
 
-const client = await createClient({
+const client = createClient({
   plugins: [defaultInit({
     headers: {
       [DEFAULT_HEADER_KEY]: DEFAULT_HEADER_VALUE,
