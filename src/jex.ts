@@ -182,7 +182,7 @@ async function createInitAndUrl(
     args,
   )
 
-  const { body, contentType } = createBody(actionConfig, args)
+  const { body, contentType } = await createBody(actionConfig, args)
   let init = {
     body,
     ...(contentType
@@ -326,41 +326,51 @@ function stringifyEntries(obj: object) {
   )
 }
 
-function createBody(
+async function createBody(
   actionConfig: BodyfullActionConfig<any>,
   args: PossibleActionArgs | undefined,
-): {
+): Promise<{
   body?: BodyInit
   contentType?: string
-} {
+}> {
   if (!args?.body || !actionConfig.body) {
     return {}
   }
-
-  const bodySource = actionConfig.bodySource ?? "json"
 
   const parsed = actionConfig.body?._transform?.(args.body) ??
     actionConfig.body?.parse(args.body) ??
     args.body
 
+  const bodySource = actionConfig.bodySource ?? "json"
+
+  const bodyData = typeof bodySource === "function"
+    ? await bodySource(parsed)
+    : parsed
+
+  if (isValidBody(bodyData)) {
+    return {
+      body: parsed,
+    }
+  }
+
   switch (bodySource) {
     case "json": {
       return {
-        body: JSON.stringify(parsed),
+        body: JSON.stringify(bodyData),
         contentType: "application/json; charset=utf-8",
       }
     }
     case "FormData": {
-      if (parsed instanceof FormData) {
+      if (bodyData instanceof FormData) {
         return {
-          body: parsed,
+          body: bodyData,
         }
       }
 
       const data = new FormData()
 
       Object
-        .entries(parsed)
+        .entries(bodyData)
         .forEach(([key, value]) => data.append(key, (value as any).toString()))
 
       return {
@@ -368,16 +378,16 @@ function createBody(
       }
     }
     case "URLSearchParameters": {
-      if (parsed instanceof URLSearchParams) {
+      if (bodyData instanceof URLSearchParams) {
         return {
-          body: parsed,
+          body: bodyData,
         }
       }
 
       const data = new URLSearchParams()
 
       Object
-        .entries(parsed)
+        .entries(bodyData)
         .forEach(([key, value]) => data.append(key, (value as any).toString()))
 
       return {
@@ -386,7 +396,7 @@ function createBody(
     }
     default: {
       return {
-        body: parsed,
+        body: bodyData,
       }
     }
   }
@@ -402,7 +412,9 @@ async function parseData(
   }
 
   const dataSource = actionConfig.dataSource ?? "json"
-  const data = await res[dataSource]()
+  const data = typeof dataSource === "function"
+    ? await dataSource(res)
+    : await res[dataSource]()
 
   return actionConfig.data?._transform?.(data) ??
     actionConfig.data?.parse(data) ?? data
@@ -410,4 +422,33 @@ async function parseData(
 
 function appendQuery(url: string, key: string, value: any) {
   return url += `${url.includes("?") ? "&" : "?"}${key}=${value.toString()}`
+}
+
+function isValidBody(value: unknown) {
+  if (value === undefined) return true
+
+  if (typeof value === "object") {
+    if (value === null) return true
+    if ((value as any).constructor === Object) return false
+
+    const val = value as ArrayBufferView
+    const bufferCheck = val.buffer instanceof ArrayBuffer ||
+      val.buffer instanceof SharedArrayBuffer
+    const byteLengthCheck = typeof val.byteLength === "number"
+    const byteOffsetCheck = typeof val.byteOffset === "number"
+    if (bufferCheck && byteLengthCheck && byteOffsetCheck) return true
+  }
+
+  if (
+    typeof value === "string" ||
+    value instanceof URLSearchParams ||
+    value instanceof FormData ||
+    value instanceof Blob ||
+    value instanceof ArrayBuffer ||
+    value instanceof ReadableStream
+  ) {
+    return true
+  }
+
+  return false
 }

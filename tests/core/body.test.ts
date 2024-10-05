@@ -42,7 +42,6 @@ const form = createClient({
 const raw = createClient({
   postAnything: {
     body: schema<string>(),
-    bodySource: "raw",
   },
 })
 
