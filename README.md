@@ -214,6 +214,39 @@ const client = jex({
 })
 ```
 
+#### API Key Auth
+
+Provides API key authentication using headers by default, or alternatively
+query.
+
+```ts
+import { jex } from "@olli/jex"
+import { apiKeyAuth } from "@olli/jex/auth"
+
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  plugins: [apiKeyAuth({ apiKey: "secret_key" })],
+  endpoints: {},
+})
+```
+
+```ts
+import { jex } from "@olli/jex"
+import { apiKeyAuth } from "@olli/jex/auth"
+
+const client = jex({
+  baseUrl: "https://domain.com/api",
+  plugins: [apiKeyAuth({
+    apiKey: "secret_key",
+    apiKeyName: "X-API-KEY", // default
+    appId: "my-app",
+    appIdName: "X-APP-ID", // default
+    strategy: "query", // default = "headers"
+  })],
+  endpoints: {},
+})
+```
+
 #### Bearer Auth
 
 Provides bearer (token) authentication. Accepts both a static bearer token or

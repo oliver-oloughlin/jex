@@ -1,6 +1,6 @@
 import type { Plugin, PluginBeforeInit } from "../../types.ts"
 
-export type ApiKeyOptions = {
+export type ApiKeyAuthOptions = {
   /** The API key used for authentication. */
   apiKey: string
 
@@ -72,14 +72,14 @@ export type ApiKeyStrategy = "headers" | "query"
  * })
  * ```
  */
-export function apiKeyAuth(options: ApiKeyOptions): Plugin {
+export function apiKeyAuth(options: ApiKeyAuthOptions): Plugin {
   return new ApiKeyAuth(options)
 }
 
 class ApiKeyAuth implements Plugin {
-  private options: ApiKeyOptions
+  private options: ApiKeyAuthOptions
 
-  constructor(options: ApiKeyOptions) {
+  constructor(options: ApiKeyAuthOptions) {
     this.options = options
   }
 

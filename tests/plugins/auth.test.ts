@@ -3,7 +3,7 @@ import { assert, assertEquals } from "@std/assert"
 import { type AnythingData, createClient } from "../utils.ts"
 import { bearerAuth } from "../../src/plugins/auth/bearer.ts"
 import { schema } from "../../mod.ts"
-import { apiKeyAuth } from "../../src/plugins/auth/api-key.ts"
+import { apiKeyAuth } from "../../src/plugins/auth/api_key.ts"
 
 const USERNAME = "user"
 const PASSWORD = "pass"

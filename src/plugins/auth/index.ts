@@ -102,7 +102,8 @@
  * ```
  */
 
-export { basicAuth } from "./basic.ts"
+export { basicAuth, type BasicAuthOptions } from "./basic.ts"
+export { apiKeyAuth, type ApiKeyAuthOptions } from "./api_key.ts"
 export {
   bearerAuth,
   type BearerAuthOptions,
