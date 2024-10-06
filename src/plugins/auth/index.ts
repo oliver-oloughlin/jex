@@ -20,6 +20,44 @@
  *   },
  * ```
  *
+ * ## API Key Auth
+ *
+ * API key authentication using headers by default, or alternatively query.
+ *
+ * @example
+ * ```ts
+ * import { jex } from "@olli/jex"
+ * import { apiKeyAuth } from "@olli/jex/auth"
+ *
+ * const client = jex({
+ *   baseUrl: "https://domain.com/api",
+ *   plugins: [apiKeyAuth({ apiKey: "secret_key" })],
+ *   endpoints: {
+ *     // ...
+ *   },
+ * })
+ * ```
+ *
+ * @example
+ * ```ts
+ * import { jex } from "@olli/jex"
+ * import { apiKeyAuth } from "@olli/jex/auth"
+ *
+ * const client = jex({
+ *   baseUrl: "https://domain.com/api",
+ *   plugins: [apiKeyAuth({
+ *     apiKey: "secret_key",
+ *     apiKeyName: "X-API-KEY", // default
+ *     appId: "my-app",
+ *     appIdName: "X-APP-ID", // default
+ *     strategy: "query" // default = "headers"
+ *   })],
+ *   endpoints: {
+ *     // ...
+ *   },
+ * })
+ * ```
+ *
  * ## Bearer Auth
  *
  * Bearer (token) authentication.
@@ -64,7 +102,8 @@
  * ```
  */
 
-export { basicAuth } from "./basic.ts"
+export { basicAuth, type BasicAuthOptions } from "./basic.ts"
+export { apiKeyAuth, type ApiKeyAuthOptions } from "./api_key.ts"
 export {
   bearerAuth,
   type BearerAuthOptions,

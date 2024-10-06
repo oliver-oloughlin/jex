@@ -80,11 +80,13 @@ export type BodylessActionConfig<TFetcher extends Fetcher = Fetcher> = {
   /**
    * Source from which to extract data from the response.
    *
+   * Can also be a function that manully resolves data from a `Response` object.
+   *
    * Is `json` by default.
    *
    * @default "json"
    */
-  dataSource?: "json" | "text" | "blob" | "arrayBuffer" | "formData"
+  dataSource?: DataSource
 
   /**
    * Schema for the query that this action takes as argument.
@@ -118,11 +120,23 @@ export type BodyfullActionConfig<TFetcher extends Fetcher = Fetcher> =
     /**
      * Source in which the body will be sent.
      *
-     * Is `json` by default.
+     * Defaults to `json` for objects, while setting the body to the raw value for values that are a valid body type.
+     *
+     * For object values, the Content-Type header is set appropriately for `json`, `URLSearchParamaters` and `FormData`.
+     *
+     * Also accepts a function that resolves the data to a `BodyInit` value.
      *
      * @default "json"
      */
-    bodySource?: "json" | "raw" | "URLSearchParameters" | "FormData"
+    bodySource?:
+      | "json"
+      | "URLSearchParameters"
+      | "FormData"
+      | ((
+        data: unknown,
+      ) =>
+        | BodyInit
+        | Promise<BodyInit>)
   }
 
 /** API action configuration.  */
@@ -292,12 +306,13 @@ type HasMembersExtending<T1, T2> = Extract<T1, T2> extends never ? false
   : true
 
 /** Source of response data. */
-export type DataSource =
+export type DataSource<TData = unknown> =
   | "json"
   | "text"
   | "blob"
   | "arrayBuffer"
   | "formData"
+  | ((res: Response) => TData)
 
 /** Source of request body. */
 export type BodySource = "json" | "raw" | "URLSearchParameters" | "FormData"
