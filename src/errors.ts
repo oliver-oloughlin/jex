@@ -1,7 +1,7 @@
 import type { HttpStatusCode } from "./http_status_code.ts"
 
 export class HttpError extends Error {
-  readonly name = "HttpError"
+  override readonly name = "HttpError"
   readonly status: HttpStatusCode
   readonly statusText: string
 

@@ -1,47 +1,87 @@
 {
-  "version": "3",
-  "packages": {
-    "specifiers": {
-      "jsr:@std/assert@0.226.0": "jsr:@std/assert@0.226.0",
-      "jsr:@std/collections@1.0.0": "jsr:@std/collections@1.0.0",
-      "jsr:@std/encoding@^1.0.0": "jsr:@std/encoding@1.0.3",
-      "jsr:@std/fmt@^0.225.5": "jsr:@std/fmt@0.225.6",
-      "jsr:@std/internal@^1.0.0": "jsr:@std/internal@1.0.0",
-      "jsr:@std/ulid@0.224.1": "jsr:@std/ulid@0.224.1"
+  "version": "4",
+  "specifiers": {
+    "jsr:@std/assert@0.226.0": "0.226.0",
+    "jsr:@std/collections@1.0.0": "1.0.0",
+    "jsr:@std/encoding@1": "1.0.5",
+    "jsr:@std/fmt@~0.225.5": "0.225.6",
+    "jsr:@std/internal@1": "1.0.4",
+    "jsr:@std/ulid@0.224.1": "0.224.1",
+    "npm:arktype@^2.0.0-rc.15": "2.0.0-rc.15",
+    "npm:yup@^1.4.0": "1.4.0"
+  },
+  "jsr": {
+    "@std/assert@0.226.0": {
+      "integrity": "0dfb5f7c7723c18cec118e080fec76ce15b4c31154b15ad2bd74822603ef75b3",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
     },
-    "jsr": {
-      "@std/assert@0.226.0": {
-        "integrity": "0dfb5f7c7723c18cec118e080fec76ce15b4c31154b15ad2bd74822603ef75b3",
-        "dependencies": [
-          "jsr:@std/internal@^1.0.0"
-        ]
-      },
-      "@std/collections@1.0.0": {
-        "integrity": "8e4e07ce1df7badae20b80f2678c3ca3bc14cae5514c4e1817a4668ba8b1adf2"
-      },
-      "@std/encoding@1.0.3": {
-        "integrity": "5dbc2d7f5aa6062de7e19862ea856ac7a0dcce0b6fb46bb7b332d3bdcd4408b7"
-      },
-      "@std/fmt@0.225.6": {
-        "integrity": "aba6aea27f66813cecfd9484e074a9e9845782ab0685c030e453a8a70b37afc8"
-      },
-      "@std/internal@1.0.0": {
-        "integrity": "ac6a6dfebf838582c4b4f61a6907374e27e05bedb6ce276e0f1608fe84e7cd9a"
-      },
-      "@std/ulid@0.224.1": {
-        "integrity": "4de06fdb030ff3990b1b0344e330373c11ce6051ac449fc435667a485a6723fa"
-      }
+    "@std/collections@1.0.0": {
+      "integrity": "8e4e07ce1df7badae20b80f2678c3ca3bc14cae5514c4e1817a4668ba8b1adf2"
+    },
+    "@std/encoding@1.0.5": {
+      "integrity": "ecf363d4fc25bd85bd915ff6733a7e79b67e0e7806334af15f4645c569fefc04"
+    },
+    "@std/fmt@0.225.6": {
+      "integrity": "aba6aea27f66813cecfd9484e074a9e9845782ab0685c030e453a8a70b37afc8"
+    },
+    "@std/internal@1.0.4": {
+      "integrity": "62e8e4911527e5e4f307741a795c0b0a9e6958d0b3790716ae71ce085f755422"
+    },
+    "@std/ulid@0.224.1": {
+      "integrity": "4de06fdb030ff3990b1b0344e330373c11ce6051ac449fc435667a485a6723fa"
     }
   },
-  "remote": {},
+  "npm": {
+    "@ark/schema@0.17.0": {
+      "integrity": "sha512-k8HhF35UlUjNfyBrYna4YTMTjufu3Ez2mPQ5CMHpEt5Qi15Zze6g5HHlOC79gDAWJ+u2qcp2QY55L+GYY7CLVQ==",
+      "dependencies": [
+        "@ark/util"
+      ]
+    },
+    "@ark/util@0.17.0": {
+      "integrity": "sha512-bp17dQitBvkvtiVmb2XeSposr098nZx70h3/tlpfjElbkFeFwkGu6sSUS+jP/FZSIydNby+KBETiKnb235Ua0A=="
+    },
+    "arktype@2.0.0-rc.15": {
+      "integrity": "sha512-jHASe4HqZIzAgwvf7F4u1K9EQE08Ml6m+YGNEkDz4BAkxjSEZxEIev2IBSlMKy3ghN1q6mb8dLUfNaQ4GmgQJg==",
+      "dependencies": [
+        "@ark/schema",
+        "@ark/util"
+      ]
+    },
+    "property-expr@2.0.6": {
+      "integrity": "sha512-SVtmxhRE/CGkn3eZY1T6pC8Nln6Fr/lu1mKSgRud0eC73whjGfoAogbn78LkD8aFL0zz3bAFerKSnOl7NlErBA=="
+    },
+    "tiny-case@1.0.3": {
+      "integrity": "sha512-Eet/eeMhkO6TX8mnUteS9zgPbUMQa4I6Kkp5ORiBD5476/m+PIRiumP5tmh5ioJpH7k51Kehawy2UDfsnxxY8Q=="
+    },
+    "toposort@2.0.2": {
+      "integrity": "sha512-0a5EOkAUp8D4moMi2W8ZF8jcga7BgZd91O/yabJCFY8az+XSzeGyTKs0Aoo897iV1Nj6guFq8orWDS96z91oGg=="
+    },
+    "type-fest@2.19.0": {
+      "integrity": "sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA=="
+    },
+    "yup@1.4.0": {
+      "integrity": "sha512-wPbgkJRCqIf+OHyiTBQoJiP5PFuAXaWiJK6AmYkzQAh5/c2K9hzSApBZG5wV9KoKSePF7sAxmNSvh/13YHkFDg==",
+      "dependencies": [
+        "property-expr",
+        "tiny-case",
+        "toposort",
+        "type-fest"
+      ]
+    }
+  },
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@0.226.0",
       "jsr:@std/collections@1.0.0",
-      "jsr:@std/encoding@^1.0.0",
-      "jsr:@std/fmt@^0.225.5",
+      "jsr:@std/encoding@1",
+      "jsr:@std/fmt@~0.225.5",
       "jsr:@std/ulid@0.224.1",
-      "npm:zod@^3"
+      "npm:arktype@^2.0.0-rc.15",
+      "npm:yup@^1.4.0",
+      "npm:zod@3"
     ]
   }
 }
