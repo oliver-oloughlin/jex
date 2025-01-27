@@ -1,6 +1,6 @@
 import { assert } from "@std/assert/assert"
 import { isValidBody } from "../../src/utils.ts"
-import { assertFalse } from "@std/assert/assert-false"
+import { assertFalse } from "@std/assert/false"
 
 class ArrayBufferView_ArrayBuffer implements ArrayBufferView {
   buffer: ArrayBufferLike = new ArrayBuffer(10)
