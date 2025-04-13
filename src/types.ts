@@ -346,7 +346,7 @@ type Input<TSchema extends Schema<any, any>> = TSchema["_input"]
  * @param init - Request options.
  */
 export type Fetcher = (
-  url: string | URL,
+  url: RequestInfo,
   init?: RequestInit,
 ) => Response | Promise<Response>
 
@@ -374,6 +374,10 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
     | void
     | Promise<PluginBeforeInit | void>
 
+  intercept?(
+    ctx: PluginInterceptContext<TFetcher>,
+  ): void | Response | Promise<Response | void>
+
   /**
    * Runs after a response is received.
    *
@@ -398,21 +402,30 @@ export type PluginBeforeInit<TFetcher extends Fetcher = Fetcher> =
 
 /** Context object from before a request is sent. */
 export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
-  id: string
-  client: ClientConfig<EndpointRecord<TFetcher>, TFetcher>
-  endpoint: EndpointConfig<TFetcher>
-  action: ActionConfig<TFetcher>
-  url: string
-  method: Method
-  init: StrippedRequestInit<FetcherInit<TFetcher>>
-  args?: PossibleActionArgs
+  readonly id: string
+  readonly client: ClientConfig<EndpointRecord<TFetcher>, TFetcher>
+  readonly endpoint: EndpointConfig<TFetcher>
+  readonly action: ActionConfig<TFetcher>
+  readonly url: string
+  readonly method: Method
+  readonly init: StrippedRequestInit<FetcherInit<TFetcher>>
+  readonly args?: PossibleActionArgs
 }
+
+/** Context object as the request will be sent. */
+export type PluginInterceptContext<TFetcher extends Fetcher = Fetcher> =
+  & PluginBeforeContext<TFetcher>
+  & {
+    readonly req: Request
+    readonly res: Response | null
+    fetch(): ReturnType<TFetcher>
+  }
 
 /** Context object from after a response is received. */
 export type PluginAfterContext<TFetcher extends Fetcher = Fetcher> =
   & PluginBeforeContext<TFetcher>
   & {
-    res: Response
+    readonly res: Response
     refetch(
       init?: StrippedRequestInit<FetcherInit<TFetcher>>,
     ): Promise<Response>

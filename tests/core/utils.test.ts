@@ -1,5 +1,5 @@
 import { assert } from "@std/assert/assert"
-import { isValidBody } from "../../src/utils.ts"
+import { isValidBody } from "../../src/fetch.utils.ts"
 import { assertFalse } from "@std/assert/false"
 
 class ArrayBufferView_ArrayBuffer implements ArrayBufferView {

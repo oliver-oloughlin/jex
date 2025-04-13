@@ -11,7 +11,8 @@ import type {
   Result,
 } from "./types.ts"
 import { ulid } from "@std/ulid"
-import { createInitAndUrl, parseData, sendRequest } from "./utils.ts"
+import { createInitAndUrl, parseData, sendRequest } from "./fetch.utils.ts"
+import { PluginsList } from "./plugins_list.ts"
 
 export function jex<
   const TEndpointRecord extends EndpointRecord<TFetcher>,
@@ -66,6 +67,12 @@ function createAction(
     try {
       const id = clientConfig.idGenerator?.() ?? ulid()
 
+      const plugins = new PluginsList({
+        clientConfig,
+        endpointConfig,
+        actionConfig,
+      })
+
       const { init, url } = await createInitAndUrl(
         path,
         clientConfig,
@@ -74,6 +81,7 @@ function createAction(
         args,
         method,
         id,
+        plugins,
       )
 
       const res = await sendRequest(
@@ -85,6 +93,7 @@ function createAction(
         url,
         method,
         id,
+        plugins,
       )
 
       const data = await parseData(actionConfig, res)
