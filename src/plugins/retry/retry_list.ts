@@ -44,7 +44,7 @@ class RetryList implements Plugin {
 
     for (const ms of this.retries) {
       await sleep(ms)
-      const res = await ctx.refetch()
+      const res = await ctx.fetch()
       if (res.ok || !RETRYABLE_HTTP_STATUS_CODES.includes(ctx.res.status)) {
         return res
       }

@@ -412,12 +412,18 @@ export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
   readonly args?: PossibleActionArgs
 }
 
+export type PreparedFetch<TFetcher extends Fetcher> = (
+  init?: StrippedRequestInit<FetcherInit<TFetcher>>,
+) => ReturnType<TFetcher>
+
 /** Context object as the request will be sent. */
 export type PluginInterceptContext<TFetcher extends Fetcher = Fetcher> =
   & PluginBeforeContext<TFetcher>
   & {
     readonly res: Response | null
-    fetch(): ReturnType<TFetcher>
+    fetch(
+      init?: StrippedRequestInit<FetcherInit<TFetcher>>,
+    ): ReturnType<TFetcher>
   }
 
 /** Context object from after a response is received. */
@@ -425,9 +431,9 @@ export type PluginAfterContext<TFetcher extends Fetcher = Fetcher> =
   & PluginBeforeContext<TFetcher>
   & {
     readonly res: Response
-    refetch(
+    fetch(
       init?: StrippedRequestInit<FetcherInit<TFetcher>>,
-    ): Promise<Response>
+    ): ReturnType<TFetcher>
   }
 
 /** Path parameters extracted from given path. */

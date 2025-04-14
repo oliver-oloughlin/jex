@@ -6,8 +6,8 @@ import type {
   EndpointConfig,
   Fetcher,
   Method,
-  PluginAfterContext,
   PossibleActionArgs,
+  PreparedFetch,
 } from "./types.ts"
 import { applyAfter, applyBefore, applyInterceptors } from "./plugin.utils.ts"
 import { stringifyEntries } from "./utils.ts"
@@ -104,7 +104,9 @@ export async function sendRequest(
   plugins: PluginsList,
 ): Promise<Response> {
   const fetcher = clientConfig.fetcher ?? fetch
-  const _fetch = () => fetcher(url, init)
+
+  const _fetch: PreparedFetch<Fetcher> = (i) =>
+    fetcher(url, deepMerge(init, i ?? {}))
 
   let res = await applyInterceptors(
     clientConfig,
@@ -121,46 +123,19 @@ export async function sendRequest(
 
   res = res ?? await _fetch()
 
-  let ctx: PluginAfterContext<Fetcher> = {
-    id,
-    client: clientConfig,
-    endpoint: endpointConfig,
-    action: actionConfig,
+  res = await applyAfter(
+    clientConfig,
+    endpointConfig,
+    actionConfig,
+    plugins,
+    args,
     init,
-    args: args ?? {},
     url,
     method,
+    id,
     res,
-    async refetch(refetchInit) {
-      let i = deepMerge(init, refetchInit ?? {})
-      i = deepMerge(i, { method })
-      return await fetcher(url, init)
-    },
-  }
-
-  for (const plugin of clientConfig.plugins ?? []) {
-    ctx = {
-      ...ctx,
-      res,
-    }
-    res = await applyAfter(ctx, plugin)
-  }
-
-  for (const plugin of endpointConfig.plugins ?? []) {
-    ctx = {
-      ...ctx,
-      res,
-    }
-    res = await applyAfter(ctx, plugin)
-  }
-
-  for (const plugin of actionConfig.plugins ?? []) {
-    ctx = {
-      ...ctx,
-      res,
-    }
-    res = await applyAfter(ctx, plugin)
-  }
+    _fetch,
+  )
 
   return res
 }

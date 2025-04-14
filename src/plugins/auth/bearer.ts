@@ -167,7 +167,7 @@ class BearerAuth<TData, TToken> implements Plugin {
 
     if (!isRetryable) return
 
-    return await ctx.refetch({
+    return await ctx.fetch({
       headers: {
         Authorization: await this.getToken(ctx.client.fetcher ?? fetch),
       },

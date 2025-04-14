@@ -10,6 +10,7 @@ import type {
   PluginBeforeContext,
   PluginInterceptContext,
   PossibleActionArgs,
+  PreparedFetch,
 } from "./types.ts"
 import { safeAwait } from "./utils.ts"
 import type { PluginsList } from "./plugins_list.ts"
@@ -63,9 +64,10 @@ export async function applyInterceptors(
   url: string,
   method: Method,
   id: string,
-  fetch: () => ReturnType<Fetcher>,
+  fetch: PreparedFetch<Fetcher>,
 ): Promise<Response | null> {
   let res: Response | null = null
+
   let ctx: PluginInterceptContext = {
     client: clientConfig,
     endpoint: endpointConfig,
@@ -93,13 +95,44 @@ export async function applyInterceptors(
 }
 
 export async function applyAfter(
-  ctx: PluginAfterContext<Fetcher>,
-  plugin: Plugin<Fetcher>,
+  clientConfig: ClientConfig<any, any>,
+  endpointConfig: EndpointConfig<any>,
+  actionConfig: ActionConfig<any>,
+  plugins: PluginsList,
+  args: PossibleActionArgs | undefined,
+  init: RequestInit,
+  url: string,
+  method: Method,
+  id: string,
+  response: Response,
+  fetch: PreparedFetch<Fetcher>,
 ): Promise<Response> {
-  if (!plugin.after) return ctx.res
-  const res = await plugin.after(ctx)
-  if (res) return res
-  return ctx.res
+  let res = response
+
+  let ctx: PluginAfterContext = {
+    client: clientConfig,
+    endpoint: endpointConfig,
+    action: actionConfig,
+    args,
+    init,
+    url,
+    method,
+    id,
+    res,
+    fetch,
+  }
+
+  await plugins.apply(async (plugin) => {
+    if (!plugin.after) return
+
+    res = await safeAwait(plugin.after(ctx)) ?? res
+    ctx = {
+      ...ctx,
+      res,
+    }
+  })
+
+  return res
 }
 
 export function pluginsList(
