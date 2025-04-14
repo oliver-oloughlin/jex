@@ -104,8 +104,7 @@ export async function sendRequest(
   plugins: PluginsList,
 ): Promise<Response> {
   const fetcher = clientConfig.fetcher ?? fetch
-  const req = new Request(url, init)
-  const _fetch = () => fetcher(req)
+  const _fetch = () => fetcher(url, init)
 
   let res = await applyInterceptors(
     clientConfig,
@@ -117,7 +116,6 @@ export async function sendRequest(
     url,
     method,
     id,
-    req,
     _fetch,
   )
 

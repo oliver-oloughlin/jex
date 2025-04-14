@@ -63,7 +63,6 @@ export async function applyInterceptors(
   url: string,
   method: Method,
   id: string,
-  req: Request,
   fetch: () => ReturnType<Fetcher>,
 ): Promise<Response | null> {
   let res: Response | null = null
@@ -76,7 +75,6 @@ export async function applyInterceptors(
     url,
     method,
     id,
-    req,
     res,
     fetch,
   }

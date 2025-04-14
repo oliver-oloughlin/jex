@@ -346,7 +346,7 @@ type Input<TSchema extends Schema<any, any>> = TSchema["_input"]
  * @param init - Request options.
  */
 export type Fetcher = (
-  url: RequestInfo,
+  url: string,
   init?: RequestInit,
 ) => Response | Promise<Response>
 
@@ -416,7 +416,6 @@ export type PluginBeforeContext<TFetcher extends Fetcher = Fetcher> = {
 export type PluginInterceptContext<TFetcher extends Fetcher = Fetcher> =
   & PluginBeforeContext<TFetcher>
   & {
-    readonly req: Request
     readonly res: Response | null
     fetch(): ReturnType<TFetcher>
   }
