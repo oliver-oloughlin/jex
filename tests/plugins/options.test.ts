@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert"
-import { defaultInit } from "../../src/plugins/init/defaultInit.ts"
+import { defaultOptions } from "../../src/plugins/options/default_options.ts"
 import { createClient } from "../utils.ts"
 import { schema } from "../../mod.ts"
 
@@ -8,7 +8,7 @@ const DEFAULT_HEADER_VALUE = "bar"
 const OVERRIDE_HEADER_VALUE = "baz"
 
 const client = createClient({
-  plugins: [defaultInit({
+  plugins: [defaultOptions({
     headers: {
       [DEFAULT_HEADER_KEY]: DEFAULT_HEADER_VALUE,
     },
@@ -18,8 +18,8 @@ const client = createClient({
   },
 })
 
-Deno.test("plugins - init", async (t) => {
-  await t.step("default_init", async (t) => {
+Deno.test("plugins - options", async (t) => {
+  await t.step("default_options", async (t) => {
     await t.step("Should set default headers", async () => {
       const res = await client["/anything"].get()
       assert(res.ok)

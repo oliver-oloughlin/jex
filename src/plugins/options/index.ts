@@ -26,4 +26,4 @@
  * ```
  */
 
-export { defaultInit } from "./defaultInit.ts"
+export { defaultOptions } from "./default_options.ts"

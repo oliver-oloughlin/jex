@@ -360,6 +360,9 @@ export type FetcherInit<TFetcher extends Fetcher = Fetcher> = Exclude<
  * A plugin object that can be provided to either a client, endpoint, or action.
  */
 export type Plugin<TFetcher extends Fetcher = Fetcher> = {
+  /** A unique name idnetifying the plugin. */
+  readonly name: string
+
   /**
    * Runs before a request is sent.
    *
@@ -374,6 +377,13 @@ export type Plugin<TFetcher extends Fetcher = Fetcher> = {
     | void
     | Promise<PluginBeforeInit | void>
 
+  /**
+   * Runs as a request will be sent.
+   *
+   * If a repsonse is returned, the request is bypassed. If no response is returned, the request is sent as normal.
+   *
+   * @param ctx
+   */
   intercept?(
     ctx: PluginInterceptContext<TFetcher>,
   ): void | Response | Promise<Response | void>

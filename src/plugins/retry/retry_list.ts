@@ -30,6 +30,8 @@ export function retryList(retries: number[]): Plugin {
 }
 
 class RetryList implements Plugin {
+  name = "@olli/kvdex/plugins/retry/retry-list"
+
   private retries: number[]
 
   constructor(retries: number[]) {

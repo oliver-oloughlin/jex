@@ -63,15 +63,15 @@ function createAction(
   actionConfig: ActionConfig<any>,
   method: Method,
 ) {
+  const plugins = new PluginsList({
+    clientConfig,
+    endpointConfig,
+    actionConfig,
+  })
+
   return async function (args?: PossibleActionArgs): Promise<Result<any>> {
     try {
       const id = clientConfig.idGenerator?.() ?? ulid()
-
-      const plugins = new PluginsList({
-        clientConfig,
-        endpointConfig,
-        actionConfig,
-      })
 
       const { init, url } = await createInitAndUrl(
         path,

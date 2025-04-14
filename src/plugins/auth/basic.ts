@@ -35,6 +35,8 @@ export function basicAuth(options: BasicAuthOptions): Plugin {
 }
 
 class BasicAuth implements Plugin {
+  name = "@olli/kvdex/plugins/auth/basic"
+
   private token: string
 
   constructor({

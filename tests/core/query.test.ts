@@ -18,6 +18,7 @@ type QueryTransform = {
 }
 
 const q1: Plugin = {
+  name: "q1",
   before: () => {
     return {
       query: {
@@ -28,6 +29,7 @@ const q1: Plugin = {
 }
 
 const q2: Plugin = {
+  name: "q2",
   before: () => {
     return {
       query: {

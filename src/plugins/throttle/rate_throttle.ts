@@ -57,6 +57,8 @@ const MS_MULTIPLIER_MAP: Record<TimeUnit, number> = {
 }
 
 class RateThrottle implements Plugin {
+  name = "@olli/kvdex/plugins/throttle/rate-throttle"
+
   private windowLimit: number
   private windowMs: number
   private windowTimestamp: number

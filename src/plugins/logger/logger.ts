@@ -94,6 +94,8 @@ export function logger(options?: LoggerOptions): Plugin {
 }
 
 class Logger implements Plugin {
+  name = "@olli/kvdex/plugins/logger"
+
   private fn: LogFn
   private query: boolean
   private origin: boolean

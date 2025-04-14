@@ -77,6 +77,8 @@ export function apiKeyAuth(options: ApiKeyAuthOptions): Plugin {
 }
 
 class ApiKeyAuth implements Plugin {
+  name = "@olli/kvdex/plugins/auth/api-key"
+
   private options: ApiKeyAuthOptions
 
   constructor(options: ApiKeyAuthOptions) {

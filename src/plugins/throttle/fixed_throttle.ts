@@ -29,6 +29,8 @@ export function fixedThrottle(interval: number): Plugin {
 }
 
 class FixedThrottle implements Plugin {
+  name = "@olli/kvdex/plugins/throttle/fixed-throttle"
+
   private interval: number
   private previousTimestamp: number
   private waiting: number

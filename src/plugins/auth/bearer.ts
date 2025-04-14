@@ -124,6 +124,8 @@ type DynamicStrategy<TData, TToken> = {
 } & Omit<DynamicBearerAuthOptions<TData, TToken>, "credentials">
 
 class BearerAuth<TData, TToken> implements Plugin {
+  name = "@olli/kvdex/plugins/auth/bearer-auth"
+
   private dynamicToken: TToken | null
   private options: StaticStrategy | DynamicStrategy<TData, TToken>
 
